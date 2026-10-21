@@ -21,3 +21,9 @@ Models/
 
 # Benchmark photos are of real people: never commit them
 Benchmarks/photos/
+
+# Vendored llama.cpp build (fetched by scripts/fetch-llama.sh)
+Vendor/
+
+# SwiftPM build output for tools
+Tools/*/.build/
