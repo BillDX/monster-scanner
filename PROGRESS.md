@@ -4,6 +4,27 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — M1 part 1: game logic in MonsterCore
+
+**Changed**
+
+- Evidence types (`SubjectObservations`, `Measurements`, `ScanEvidence`), colour families, moon phase, seeded RNG.
+- Clue book: 40 clues across 7 monsters, plus anomaly readings and human reasons. No hair/eye colour, age, or mask clues.
+- Verdict engine: seeded, deterministic, human threshold, confidence 51–99.9 %, top 3 clues, no-face Ghost verdict.
+- 64 dossier templates (`dossiers.json`), kindness checker, telemetry lines.
+- Renamed two types to avoid clashes with Apple SDK types ([D-008](DECISIONS.md#d-008)).
+
+**Measured**
+
+- `swift test`: 39 tests in 5 suites pass on the Mac.
+- First run caught two real problems: the banned word "stab" matched "STABLE", and strong verdicts all showed 99.6 % so Second Opinion didn't change the number. Both fixed ([D-009](DECISIONS.md#d-009)).
+
+**Next**
+
+- App side: photo prep, Vision, camera, consent, scanning sequence, reveal.
+
+---
+
 ## 2026-10-21 — M0 closed, M1 started
 
 **Changed**

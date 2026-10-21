@@ -16,7 +16,10 @@ let package = Package(
         .library(name: "MonsterCore", targets: ["MonsterCore"]),
     ],
     targets: [
-        .target(name: "MonsterCore"),
+        .target(
+            name: "MonsterCore",
+            resources: [.process("Resources")]
+        ),
         .testTarget(name: "MonsterCoreTests", dependencies: ["MonsterCore"]),
     ]
 )

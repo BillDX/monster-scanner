@@ -38,15 +38,15 @@ Exit check: the full game loop works in airplane mode.
 - ⬜ Vision: face rectangles, landmarks, roll/yaw; live face-tracking reticle
 - ⬜ PhotosPicker import (camera denied, and the Simulator path) with EXIF timestamp read
 - ⬜ Image prep: largest-face crop, downscale to ≤512 px, strip all metadata
-- ⬜ Code measurements: face size %, head tilt, brightness, blur (Laplacian variance), moon phase, local hour, battery, colour sampling (hair/shirt)
-- ⬜ Verdict engine: per-monster scoring, seeded anomaly factor (SHA-256 of image bytes + calibration), human threshold, confidence 51–99.9 %, top 3 clues
-- ⬜ Clue table expanded; clues limited to clothing, accessories, setting, timing, pose
-- ⬜ Dossier templates as JSON: ≥ 8 per monster, same slots as the AI prompt
+- 🟡 Code measurements: face size %, head tilt, brightness, blur (Laplacian variance), moon phase, local hour, battery, colour sampling (hair/shirt) — maths done and tested in MonsterCore; Vision/camera side next
+- ✅ Verdict engine: per-monster scoring, seeded anomaly factor (SHA-256 of image bytes + calibration), human threshold, confidence 51–99.9 %, top 3 clues
+- ✅ Clue table expanded (40 clues); clues limited to clothing, accessories, setting, timing, pose ([S-9](DECISIONS.md#s-9))
+- ✅ Dossier templates as JSON: 8 per verdict incl. human (64 total)
 - ⬜ Scanning sequence: radar sweep, probability gauge, Core Haptics heartbeat, telemetry lines with real values
 - ⬜ Reveal: blackout + haptic spike, verdict card, typewriter dossier, AVSpeechSynthesizer voice, observations, clues
 - ⬜ Edge cases: no face (Ghost offer), multiple faces (largest), camera denied
-- ⬜ Unit tests: determinism, every monster reachable, thresholds incl. human, colour sampler fixtures, moon phase known dates
-- ⬜ Content test: every template through the banned-word / banned-topic check
+- ✅ Unit tests: determinism, every monster reachable, thresholds incl. human, colour sampler fixtures, moon phase known dates
+- ✅ Content test: every template, clue and telemetry line through the banned-word / banned-topic check
 
 ## M2 — Qwen model spike ⬜
 

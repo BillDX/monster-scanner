@@ -69,6 +69,26 @@ Camera, Vision, haptics, speech and model runtimes stay in the app target.
 **Choice:** Info.plist generated from build settings (`GENERATE_INFOPLIST_FILE`). `NSCameraUsageDescription` is the only permission string. `PrivacyInfo.xcprivacy` declares no tracking, no collected data, and UserDefaults access (reason `CA92.1`, for the consent flag and settings).
 **Reason:** fewer files; every permission is visible in one place in the build settings.
 
+## D-008 — Type names `SubjectObservations` and `FaceExpression` <a id="d-008"></a>
+
+The spec's protocol returns `Observations`. Apple's current SDKs already ship a type called `Observations` (Observation framework) and one called `Expression` (Foundation), so using those names in the app would be ambiguous.
+**Choice:** `SubjectObservations` and `FaceExpression`. JSON keys are unchanged (`hair_color`, `expression`, …), so the model prompt is unaffected.
+
+## D-009 — Verdict scoring numbers <a id="d-009"></a>
+
+- Each clue has a weight of 1–3.5 points; some scale with how strongly they apply (moon fullness, head tilt, frame fill).
+- Anomaly factor: 0–2 points per monster, from the seed.
+- Human threshold: 4 points. One weak clue (≤ 2 points) can never beat it; two medium clues always do.
+- Confidence: 51 + 46 × (1 − e^(−margin/3)) plus a seeded wobble of 0–2.9 points, clamped to 51–99.9. Margin = lead over the runner-up + a quarter of the winning score. Without the wobble, strong photos all landed on 99.6% and Second Opinion looked broken.
+- The seed is SHA-256 of the downscaled RGBA pixel bytes plus the calibration number. Pixel bytes rather than JPEG bytes, so encoder differences between iOS versions can't change a verdict.
+
+**Reason:** tests pin the behaviour (every verdict reachable, close calls flip on Second Opinion, neutral photos are human). The numbers will be tuned on the phone in M1 testing; changes get logged here.
+
+## D-010 — Kindness check is a word list in code <a id="d-010"></a>
+
+**Choice:** `ContentPolicy` holds banned terms grouped by topic (appearance, body shape, ethnicity, health, age mockery, violence, insults), matched as whole words. The unit tests run every template (rendered with clues from 400 simulated photos), every clue line, anomaly line and telemetry line through it.
+**Reason:** simple, readable, and it fails `swift test` / `xcodebuild test` on a hit. From M3 the same checker screens model-written dossiers before display; a failure falls back to a template.
+
 ---
 
 ## Spec issues
@@ -120,6 +140,13 @@ SwiftUI has no built-in `onShake`. It will be done by catching the shake motion 
 
 Camera and Metal model performance can only be tested on the phone. In the Simulator the game will run from PhotosPicker (the Simulator has sample photos). All benchmark numbers come from the iPhone 14 Pro.
 **Status:** note only.
+
+### S-9 — Two extra kindness tweaks to the clue table <a id="s-9"></a>
+
+- **Kaiju "face fills > 35% of frame (dangerously large)"** could read as "your face is big". Reworded to be about distance: "Subject fills 41% of the frame. Dangerously close to the city."
+- **Mask** is never used as a clue, because a mask can be a health item. It still appears in the readout if the model reports it.
+
+**Status:** done in M1; easy to revert if you disagree.
 
 ---
 
