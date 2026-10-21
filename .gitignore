@@ -30,3 +30,6 @@ Tools/*/.build/
 
 # Benchmark results for real people stay local
 Benchmarks/private/
+
+# Helper-agent worktrees
+.claude/worktrees/

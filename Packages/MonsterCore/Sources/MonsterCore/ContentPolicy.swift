@@ -58,7 +58,7 @@ public enum ContentPolicy {
             "unflattering", "unfortunate", "tired-looking", "worn out", "scary-looking",
         ],
         .ageMockery: ["old", "older", "oldest", "aging", "ageing", "elder*", "youthful", "young-looking"],
-        .appearance: ["looks", "looking good", "tone", "glamorous", "stunning", "hot"],
+        .appearance: ["looks", "looking good", "tone", "glamorous", "stunning", "hot", "hair*", "curls", "ponytail", "fringe"],
     ]
 
     /// Colour words are fine for clothes ("black hat") but never for people.

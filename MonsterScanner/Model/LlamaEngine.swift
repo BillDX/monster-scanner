@@ -137,6 +137,8 @@ actor LlamaEngine {
         maxTokens: Int,
         temperature: Float = 0,
         seed: UInt32 = 0,
+        /// > 1 discourages repeating recent tokens (prose only; JSON needs repeats).
+        repeatPenalty: Float = 1,
         deadline: Date? = nil,
         onPiece: (@Sendable (String) -> Bool)? = nil
     ) throws -> Result {
@@ -200,6 +202,11 @@ actor LlamaEngine {
         }
         defer { llama_sampler_free(sampler) }
         llama_sampler_chain_add(sampler, llama_sampler_init_top_k(40))
+        if repeatPenalty > 1 {
+            llama_sampler_chain_add(sampler, llama_sampler_init_penalties(
+                llama_vocab_n_tokens(vocab), 96, repeatPenalty, 0.1, 0.1
+            ))
+        }
         if temperature > 0 {
             llama_sampler_chain_add(sampler, llama_sampler_init_top_p(0.95, 1))
             llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature))
@@ -246,7 +253,10 @@ actor LlamaEngine {
             // Fast path in llama.cpp's C code (it also updates the chain's state);
             // the Swift full-vocabulary pass runs only when the grammar says no.
             var token = llama_sampler_sample(sampler, context, -1)
-            if !grammarAllows(token) { token = pick(useGrammar: true) }
+            if !grammarAllows(token) {
+                token = pick(useGrammar: true)
+                llama_sampler_accept(sampler, token) // keep the penalty history right
+            }
             if llama_vocab_is_eog(vocab, token) { break }
             if let grammarSampler { llama_sampler_accept(grammarSampler, token) }
             result.generatedTokens += 1

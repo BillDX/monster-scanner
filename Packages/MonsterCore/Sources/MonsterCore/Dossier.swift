@@ -12,6 +12,12 @@ public struct DossierInput: Sendable, Equatable {
     public var trueAgeYears: Int
     /// Picks the template; comes from the verdict seed.
     public var seed: UInt64
+    /// For the AI dossier (M3): kind extras from the observer.
+    public var subspecies: String?
+    public var funDetails: [String] = []
+    public var expressionRead: String?
+    public var vibe: String?
+    public var setting: String?
 
     public init(verdict: Verdict, observations: SubjectObservations) {
         monster = verdict.monster
@@ -21,6 +27,11 @@ public struct DossierInput: Sendable, Equatable {
         caseNumber = verdict.caseNumber
         trueAgeYears = verdict.trueAgeYears
         seed = verdict.seed
+        subspecies = Subspecies.name(for: verdict.monster, seed: verdict.seed)
+        funDetails = observations.funDetails
+        expressionRead = observations.expressionRead
+        vibe = observations.vibe
+        setting = observations.backgroundHint
     }
 
     public init(
