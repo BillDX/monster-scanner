@@ -46,7 +46,7 @@ done
 [ -f "$SRC/labels.csv" ] && copy_to "$SRC/labels.csv" "Documents/Benchmarks/$SET/labels.csv"
 echo "Copied $COUNT photos to set '$SET'. Launching benchmark…"
 
-if ! LAUNCH="$(xcrun devicectl device process launch --device "$DEVICE" --terminate-existing "$BUNDLE" "$FLAG" "$SET" 2>&1)"; then
+if ! LAUNCH="$(xcrun devicectl device process launch --device "$DEVICE" --terminate-existing "$BUNDLE" -- "$FLAG" "$SET" 2>&1)"; then
   if echo "$LAUNCH" | grep -q "Locked"; then
     echo "The iPhone is locked. Unlock it (keep it unlocked for about a minute) and run this again." >&2
   else

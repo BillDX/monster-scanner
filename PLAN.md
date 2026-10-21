@@ -4,7 +4,7 @@ Milestones, tasks and status. Keep this in step with [PROGRESS.md](PROGRESS.md):
 
 Status key: ✅ done · 🟡 in progress · ⏸ waiting on Bill · ⬜ not started
 
-**Current milestone: M2 — playful observer done; accuracy benchmark on hold (Bill's call).**
+**Current milestone: M3 — built and checked on the iPhone; waiting for Bill's review.** (M2's accuracy benchmark is on hold by Bill's choice.)
 
 ---
 
@@ -73,24 +73,26 @@ Exit check: the DECISIONS.md benchmark table is filled in.
 - ⬜ Evaluate Qwen3-VL-2B (llama.cpp), then Qwen3.5-2B; MLX fallback if the primary misses budget
 - ✅ Investigate `increased-memory-limit` entitlement: not needed (peak 958 MB)
 
-## M3 — AI dossier ⬜
+## M3 — AI dossier 🟡
 
 Exit check: 10 consecutive scans, no crash, under 12 s each.
 
-- ⬜ Streamed dossier generation with template fallback
-- ⬜ Chaos Mode toggle + banner; log verdict distribution to PROGRESS.md ([S-6](DECISIONS.md#s-6))
-- ⬜ On-device harness: 50 generated dossiers through the content check ([S-4](DECISIONS.md#s-4))
-- ⬜ 10-scan soak on device
+- ✅ AI dossier designs tested on the Mac; shipped as code-written exhibit jokes + subspecies, with streamed AI field notes behind an experimental switch ([D-022](DECISIONS.md#d-022))
+- ✅ Chaos Mode toggle + banner + code-vs-chaos tally ([D-023](DECISIONS.md#d-023)); ⏸ Bill reports the tally after some scans
+- ✅ On-device: 50 AI field notes through the strict checker: 187 sentences kept, 13 dropped, 0 unkind kept
+- ✅ 10-scan soak on the iPhone: no crash, worst shutter-to-reveal 9.1 s, peak 953 MB; scans 9–10 switched to Classic as the phone got hot
+- ⏸ Bill: real scans with the full fun pack; decide on the Save-to-Photos permission ([D-026](DECISIONS.md#d-026))
 
 ## M4 — Polish ⬜
 
 Exit check: feels like a real app.
 
-- ⬜ Full boot sequence, CRT styling pass, app icon
-- ⬜ Sounds (bundled, royalty-free or self-made)
-- ⬜ Certificate of Monsterhood (ImageRenderer, share sheet only on tap, no metadata)
+- 🟡 Boot sequence with random checks ✅; CRT styling pass, app icon ⬜
+- ✅ Sounds, synthesised in code (pulled into M3, [D-024](DECISIONS.md#d-024))
+- ✅ Certificate of Monsterhood (pulled into M3)
 - ✅ Second Opinion and Scan Again (pulled into M1)
-- ⬜ Burn the Evidence, shake to rescan
+- ✅ Burn the Evidence, shake for a Second Opinion (pulled into M3)
+- ✅ Per-monster reveal effects (pulled into M3)
 - ⬜ Case Files (opt-in, encrypted, excluded from backups)
 
 ## M5 — Hardening ⬜

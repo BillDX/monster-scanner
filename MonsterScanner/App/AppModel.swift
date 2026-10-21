@@ -29,7 +29,12 @@ final class AppModel {
         }
     }
     var hapticsEnabled: Bool { didSet { defaults.set(hapticsEnabled, forKey: Keys.haptics) } }
-    var soundsEnabled: Bool { didSet { defaults.set(soundsEnabled, forKey: Keys.sounds) } }
+    var soundsEnabled: Bool {
+        didSet {
+            defaults.set(soundsEnabled, forKey: Keys.sounds)
+            SoundFX.shared.isEnabled = soundsEnabled
+        }
+    }
     /// Spec 4.2b: the AI picks the verdict. Off by default.
     var chaosMode: Bool { didSet { defaults.set(chaosMode, forKey: Keys.chaos) } }
     /// M3 experiment: Agent K-9's streamed AI field notes. Off by default (D-022).
@@ -56,6 +61,7 @@ final class AppModel {
         chaosMode = defaults.bool(forKey: Keys.chaos)
         aiFieldNotes = defaults.bool(forKey: Keys.fieldNotes)
         tally = defaults.dictionary(forKey: Keys.tally) as? [String: Int] ?? [:]
+        SoundFX.shared.isEnabled = soundsEnabled
     }
 
     func record(_ verdict: Monster, chaos: Bool) {
@@ -98,6 +104,8 @@ final class AppModel {
     func secondOpinion() {
         guard let session, session.verdict != nil else { return }
         narrator.stop()
+        SoundFX.shared.play(.glitch)
+        if hapticsEnabled { haptics.tap() }
         screen = .scanning
         Task { await run(session, secondOpinion: true) }
     }
@@ -129,7 +137,13 @@ final class AppModel {
         guard self.session === session, screen == .scanning else { return }
         switch session.phase {
         case .revealed:
-            if !secondOpinion, let verdict = session.verdict { record(verdict.monster, chaos: session.isChaos) }
+            if !secondOpinion, let verdict = session.verdict {
+                record(verdict.monster, chaos: session.isChaos)
+                DebugLog.shared.record(String(
+                    format: "Shutter to reveal: %.1f s (+1.1 s drumroll to the card) · %@",
+                    Date().timeIntervalSince(session.startedAt), session.modeLabel
+                ))
+            }
             screen = .reveal
         case .noSubject:
             screen = .noSubject

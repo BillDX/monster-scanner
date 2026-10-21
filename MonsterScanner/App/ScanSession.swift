@@ -17,10 +17,11 @@ final class ScanSession {
     }
 
     static let minimumScan: Duration = .seconds(5.5)
-    /// Shutter to reveal must stay under 12 s (spec section 1).
-    static let maximumScan: Duration = .seconds(11)
+    /// Shutter to reveal must stay under 12 s (spec section 1): the scan ends
+    /// by 10 s, then a 1.1 s drumroll blackout before the card.
+    static let maximumScan: Duration = .seconds(10)
     /// Past this point a still-running model call is abandoned for Classic.
-    static let modelDeadline: Duration = .seconds(10.3)
+    static let modelDeadline: Duration = .seconds(9.5)
     static let lineInterval: Duration = .milliseconds(330)
 
     private(set) var phase: Phase = .scanning
@@ -57,6 +58,9 @@ final class ScanSession {
     @ObservationIgnored private var modelSettled = true
     @ObservationIgnored private var modelTask: Task<Void, Never>?
     @ObservationIgnored private var notesTask: Task<Void, Never>?
+
+    /// When the shutter fired (for the 12 s budget log).
+    let startedAt = Date()
 
     init(input: ClassicScanner.Input, observer: (any ObservationModel)?, tooHot: Bool, chaos: Bool = false) {
         self.input = input
@@ -231,7 +235,7 @@ final class ScanSession {
             }
             let done = ready() && queue.isEmpty && elapsed >= minimum
             if done || (ready() && elapsed >= Self.maximumScan) { break }
-            try? await Task.sleep(for: Self.lineInterval)
+            try? await Task.sleep(for: interval(elapsed: elapsed, minimum: minimum, ready: ready()))
         }
         guard phase != .failed else { return }
         if ready() {
@@ -242,6 +246,16 @@ final class ScanSession {
                 phase = .revealed
             }
         }
+    }
+
+    /// Normal pace while measuring; once the results are in, the remaining
+    /// lines speed up to finish by the minimum scan time (never faster than
+    /// ~8 lines a second), so extra jokes never make the scan drag.
+    private func interval(elapsed: Duration, minimum: Duration, ready: Bool) -> Duration {
+        guard ready, !queue.isEmpty else { return Self.lineInterval }
+        let left = max(Duration.milliseconds(0), max(minimum, elapsed + .milliseconds(800)) - elapsed)
+        let each = left / queue.count
+        return min(Self.lineInterval, max(.milliseconds(120), each))
     }
 
     private func decide() {

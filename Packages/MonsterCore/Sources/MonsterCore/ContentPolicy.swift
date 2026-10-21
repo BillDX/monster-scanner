@@ -59,6 +59,10 @@ public enum ContentPolicy {
         ],
         .ageMockery: ["old", "older", "oldest", "aging", "ageing", "elder*", "youthful", "young-looking"],
         .appearance: ["looks", "looking good", "tone", "glamorous", "stunning", "hot", "hair*", "curls", "ponytail", "fringe"],
+        .bodyShape: [
+            "chest", "shoulder*", "arm", "arms", "leg", "legs", "waist", "hips", "neck", "thigh*", "muscle*",
+            "stomach", "torso", "biceps", "physique",
+        ],
     ]
 
     /// Colour words are fine for clothes ("black hat") but never for people.

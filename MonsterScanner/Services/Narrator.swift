@@ -22,9 +22,13 @@ final class Narrator {
 
     func speak(_ text: String) {
         stop()
+        // Same session as the sound effects: playback (works with the silent
+        // switch on, as the spec wants), mixed with any music that's playing.
         let audio = AVAudioSession.sharedInstance()
         do {
-            try audio.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+            if audio.category != .playback {
+                try audio.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            }
             try audio.setActive(true)
         } catch {
             DebugLog.shared.record("Audio session failed: \(error.localizedDescription)")
@@ -56,10 +60,9 @@ final class Narrator {
         deactivate()
     }
 
+    /// The session stays active: deactivating it would stop the sound effects.
     private func deactivate() {
-        guard isSpeaking else { return }
         isSpeaking = false
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     /// Prefers an English male voice, en-GB, best quality installed.

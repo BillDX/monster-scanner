@@ -6,7 +6,7 @@ A silly, fully offline iPhone party game. Point the camera at a willing friend, 
 
 It is a toy. Scanner readings may be wildly inaccurate.
 
-**Status:** M1 (Classic Mode, no AI model yet). See [PLAN.md](PLAN.md) for milestones and [PROGRESS.md](PROGRESS.md) for the log.
+**Status:** M3 (AI observer, Chaos Mode, sounds, reveal effects, certificate). See PLAN.md for what's left. See [PLAN.md](PLAN.md) for milestones and [PROGRESS.md](PROGRESS.md) for the log.
 
 ## Requirements
 
@@ -41,9 +41,16 @@ Run from Xcode onto the iPhone 14 Pro, then:
 8. Import a photo from the library: the time of day should come from when the photo was taken.
 9. Settings → Debug log: any errors or fallbacks show up here, plus the last scan's raw numbers. Please note any head-tilt readings that look wrong.
 
-### Debug launch argument (Simulator)
+### Debug launch arguments
 
-Debug builds accept `-MSDebugScan /path/to/image.jpg`, which skips boot and consent and scans that file. Handy because the Simulator has no camera. Not present in Release builds.
+Debug builds only (not present in Release):
+
+| Argument | What it does |
+|---|---|
+| `-MSDebugScan /path/to/image.jpg` | Skips boot and consent and scans that file (the Simulator has no camera) |
+| `-MSStubObserver` | A pretend AI observer with a canned playful reading, to check the reveal in the Simulator |
+| `-MSShowCertificate` | Opens the certificate a few seconds after the reveal |
+| `-MSRunBenchmark [set]`, `-MSRunSoak [set]`, `-MSRunNotesCheck [set]` | On-device model benchmark, 10-scan soak, 50 AI field notes check; use `scripts/run-benchmark.sh` (set `CHECK=-MSRunSoak` etc.) |
 
 ### Tests
 

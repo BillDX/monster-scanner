@@ -32,6 +32,8 @@ struct ScanningView: View {
         .padding(20)
         .crtScreen()
         .accessibilityElement(children: .contain)
+        .onAppear { SoundFX.shared.play(.scanStart) }
+        .onChange(of: session.lines.count) { _, _ in SoundFX.shared.play(.blip) }
     }
 
     // MARK: Photo + radar

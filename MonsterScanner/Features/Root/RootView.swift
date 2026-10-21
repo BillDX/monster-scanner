@@ -27,6 +27,7 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.25), value: app.screen)
         .onAppear {
             app.haptics.prepare()
+            SoundFX.shared.prepare()
             #if DEBUG
             app.applyDebugLaunchArguments()
             #endif

@@ -8,24 +8,36 @@ struct RevealView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var revealed = false
+    /// Bumps on every reveal so the shake (and effect) replay.
+    @State private var revealCount = 0
+    @State private var burning = false
+    @State private var showingCertificate = false
 
     var body: some View {
         ZStack {
             if let verdict = session.verdict, let dossier = session.dossier {
-                ScrollView {
-                    VStack(spacing: 22) {
-                        header
-                        verdictCard(verdict)
-                        dossierSection(dossier, verdict: verdict)
-                        if app.aiFieldNotes && session.fieldNotesState != .off { fieldNotesSection }
-                        cluesSection(verdict)
-                        readingsSection(verdict)
-                        actions
+                BurnEffect(isBurning: burning, onFinished: { app.scanAgain() }) {
+                    ScrollView {
+                        VStack(spacing: 22) {
+                            header
+                            verdictCard(verdict)
+                            dossierSection(dossier, verdict: verdict)
+                            if app.aiFieldNotes && session.fieldNotesState != .off { fieldNotesSection }
+                            cluesSection(verdict)
+                            readingsSection(verdict)
+                            actions
+                        }
+                        .padding(20)
                     }
-                    .padding(20)
+                    .revealShake(for: verdict.monster, trigger: revealCount)
                 }
                 .opacity(revealed ? 1 : 0)
                 .scaleEffect(revealed || reduceMotion ? 1 : 0.92)
+
+                // Per-monster reveal effect, above the card, below the blackout.
+                if revealed && !burning {
+                    MonsterRevealEffect(monster: verdict.monster, trigger: session.calibration)
+                }
             }
             // Blackout before the reveal.
             Color.black
@@ -37,20 +49,58 @@ struct RevealView: View {
         .task(id: session.calibration) { await reveal() }
         .onShake {
             // Shake for a second opinion.
-            guard revealed, !session.isInvisibleVerdict else { return }
+            guard revealed, !burning, !session.isInvisibleVerdict else { return }
             app.secondOpinion()
         }
         .onDisappear { app.narrator.stop() }
+        #if DEBUG
+        .task {
+            // Debug: `-MSShowCertificate` opens the certificate after the reveal (Simulator checks).
+            guard ProcessInfo.processInfo.arguments.contains("-MSShowCertificate") else { return }
+            try? await Task.sleep(for: .seconds(9))
+            showingCertificate = true
+        }
+        #endif
+        .sheet(isPresented: $showingCertificate) {
+            if let content = session.certificateContent { CertificateSheet(content: content) }
+        }
     }
 
     private func reveal() async {
         revealed = false
-        try? await Task.sleep(for: .milliseconds(reduceMotion ? 200 : 750))
+        guard let monster = session.verdict?.monster else { return }
+        SoundFX.shared.play(.drumroll)
+        try? await Task.sleep(for: .milliseconds(reduceMotion ? 300 : 1_100))
         if app.hapticsEnabled { app.haptics.revealSpike() }
+        SoundFX.shared.play(.sting(monster))
         withAnimation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7)) { revealed = true }
-        try? await Task.sleep(for: .milliseconds(600))
-        if app.voiceEnabled, let text = session.narrationText { app.narrator.speak(text) }
+        revealCount += 1
+        scheduleImpacts(for: monster)
         if app.aiFieldNotes { session.startFieldNotes() }
+        // Let the sting land before Agent K-9 starts talking.
+        let sting = SoundFX.shared.isEnabled ? SoundFX.shared.duration(of: .sting(monster)) : 0.6
+        try? await Task.sleep(for: .seconds(max(0.6, sting)))
+        if app.voiceEnabled, let text = session.narrationText { app.narrator.speak(text) }
+    }
+
+    /// Haptic thumps (and the stamp thud) in time with the reveal effect.
+    private func scheduleImpacts(for monster: Monster) {
+        for time in MonsterRevealEffect.impactTimes(for: monster) {
+            Task {
+                try? await Task.sleep(for: .seconds(time))
+                guard revealed else { return }
+                if app.hapticsEnabled { app.haptics.tap() }
+                if monster == .human { SoundFX.shared.play(.stamp) }
+            }
+        }
+    }
+
+    private func burnTheEvidence() {
+        app.narrator.stop()
+        session.cancelFieldNotes()
+        SoundFX.shared.play(.burn)
+        if app.hapticsEnabled { app.haptics.startHeartbeat(seconds: 1.5) }
+        burning = true
     }
 
     // MARK: Sections
@@ -211,6 +261,18 @@ struct RevealView: View {
                     .buttonStyle(NeonButtonStyle())
                     .accessibilityHint("Re-runs the verdict with a different scanner calibration. You can also shake the phone.")
             }
+            if !session.isInvisibleVerdict {
+                Button("Certificate of Monsterhood 📜") {
+                    app.narrator.stop()
+                    showingCertificate = true
+                }
+                .buttonStyle(NeonButtonStyle())
+                .accessibilityHint("Shows a certificate you can share")
+            }
+            Button("Burn the Evidence 🔥") { burnTheEvidence() }
+                .buttonStyle(NeonButtonStyle(color: Theme.alert))
+                .disabled(burning)
+                .accessibilityHint("Burns the photo and result away, then returns to the camera")
             Button("Scan Again") { app.scanAgain() }
                 .buttonStyle(NeonButtonStyle(filled: true))
                 .accessibilityHint("Forgets this photo and result")

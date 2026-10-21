@@ -79,9 +79,9 @@ nonisolated enum M3Checks {
             if !tooHot { run = await model.observeDetailed(image: crop, timeout: 20, chaos: false) }
             let pipeline = Date().timeIntervalSince(start)
             // What the player sees: the scan animation runs at least 5.5 s, and the
-            // scan stops waiting for the model at 10.3 s.
-            let missedDeadline = pipeline > 10.3
-            let reveal = min(max(5.5, pipeline), 11.0) + 0.75 // + blackout before the card
+            // scan stops waiting for the model at 9.5 s.
+            let missedDeadline = pipeline > 9.5
+            let reveal = min(max(5.5, pipeline), 10.0) + 1.1 // + drumroll blackout before the card
             worst = max(worst, reveal)
             peak = max(peak, MemoryProbe.footprintBytes)
             lines.append(String(

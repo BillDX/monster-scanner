@@ -269,6 +269,67 @@ Strict mode applies only to AI text. Our own lines may still say the Bureau is "
 - **Heat matters most.** Back-to-back runs on the charger took the phone to thermal "serious", where generation runs at about half speed. At "serious" the app already uses Classic. At "fair" (state 1), detail-rich photos may miss the deadline and fall back silently. Options were a lite prompt without the playful fields while the phone is warm, or a deadline closer to 11.5 s. **Decision (Bill, 2026-10-21): leave it as is; falling back to Classic when warm is fine.**
 - Valid JSON 5/5 on every run, all first try. Peak memory 978 MB.
 
+## D-022 — M3 "AI dossier": the model sees, the code jokes <a id="d-022"></a>
+
+**Spec:** M3 = streamed AI dossier generation (section 4.3) with the template fallback.
+**Tried on the Mac with Qwen3-VL-2B** (`Tools/LlamaProbe --dossier / --notes`), with a streaming filter that holds each sentence until complete and drops it unless it passes the strict kindness check and names no other monster:
+
+| Design | Result |
+|---|---|
+| Full dossier, spec prompt | Lists facts ("Scanner confidence: 85.3%. True age: 192 years."), loops ("It's not." ×6), sometimes never reaches "Recommended action" |
+| + repetition penalty, 3–5-sentence grammar, a hand-written template as style example | No loops, right length, some great lines ("a mirror that couldn't decide if it was happy or in mourning for its own reflection"), but it **copied the example's evidence and sentences** |
+| Full dossier, no example | Original but rambling; actions cut off mid-sentence |
+| Short "field notes" postscript | Repeated the instructions back ("No teasing allowed.", "Joke ideas: …") |
+| **"That [thing]? [reason it proves they're a X]." ×2 (grammar-forced)** | Best: "That coffee cup? It proves they're secretly a robot because their caffeine supply is always right in front of them!" About half the lines are still nonsense; some say "this guy" |
+
+**Choice** (a deviation from the spec's M3, chosen for fun and safety):
+
+- The dossier stays a hand-written template (8 per verdict), so it's reliably funny and safe.
+- New **exhibit jokes are code-written and slot in what the AI spotted**: "The top hat? Possibly a disguised antenna." There are 8 per verdict, picked by the seed, never about the mask.
+- New **subspecies titles** (8 per verdict): "VAMPIRE · Brunch Bat".
+- The AI still writes what it's good at: spotted details, the expression read and the make-believe Field note (D-021).
+- The streamed AI field notes ship behind **Settings → Mischief → AI field notes (experimental)**, off by default.
+  - Every sentence goes through the filter: strict kindness, other-monster names, echoed instructions.
+  - On the phone the notes stream in after the reveal, so they never delay it.
+
+**Revisit** with Qwen3.5-2B or a larger model.
+
+## D-023 — Chaos Mode (spec 4.2b) <a id="d-023"></a>
+
+- **How it works:** Settings → Mischief → Chaos Mode (off by default). When the AI observer is ready, the observation call also returns `monster_scores` (0–100 for each monster), with the grammar enforcing the shape. Code clamps the scores; the top score wins, and anything under 40 is overruled to CERTIFIED HUMAN.
+- **Kindness:** the evidence lines, dossier and exhibits are still code-written, so the kindness rules hold.
+- **Labelling:** case numbers start "C4-"; the reveal shows a CHAOS MODE stamp and "The AI is in charge. The Bureau takes no responsibility."
+- **One call, not three:** the spec asks for observations, scores and dossier in one call. The dossier part is left out, because it would push the call past the 12 s budget and the AI dossier is experimental (D-022). Scores and observations do come from one call.
+- **Tally:** code and Chaos verdict counts are kept on the phone (Settings → Debug log → Verdict tally) for the spec's comparison. Bill reports them and they're logged in PROGRESS.md. Resolves [S-6](#s-6).
+
+## D-024 — Fun pack pulled forward from M4 <a id="d-024"></a>
+
+Bill asked to make the app "really FUN and funny in every way", so these M4 items landed in M3. Three were built in parallel by helper agents, each in its own git worktree, adding only new files, then reviewed and integrated here:
+
+- **Sound effects** (`Services/SoundFX.swift`, 14 cues), all **synthesised in code** (self-made, so no licences):
+  - the scan: power-up, telemetry blips, a drumroll during the reveal blackout
+  - a sting per verdict, e.g. organ chord for the vampire, theremin for the alien, a howl for the werewolf, and a sad trombone for Certified Human
+  - stamp, burn crackle and glitch
+  - a Settings toggle
+- **Reveal effects** (`Features/Reveal/RevealEffects.swift`): a short show per verdict with a deadpan caption, e.g. bats and "RECOMMENDED SUNSCREEN: SPF 1,000,000", a UFO borrowing a cow, kaiju stomps with a screen shake, and for Certified Human a confetti fizzle, a stamp slam and a cricket. Reduce Motion gets a still version.
+- **Burn the Evidence** (`BurnEffect.swift`): the result chars and burns away, then the app returns to the camera.
+- **Certificate of Monsterhood** (`Features/Certificate/`): a parchment certificate with the photo as "Exhibit A", subspecies, true age, clearance, field note, recommended action and a wax seal; a "Certificate of Disappointing Humanity" for humans.
+  - The PNG is rendered only when Share is tapped and has no metadata (only IHDR, sRGB, IDAT and IEND chunks).
+  - Shared through the system share sheet only.
+- **Shake** on the reveal for a Second Opinion (window motion event; no permission).
+- **Joke content:** subspecies titles, exhibit jokes, random boot checks and scan flavour lines (D-022).
+
+## D-025 — Audio session: playback, mixed with other apps <a id="d-025"></a>
+
+**Choice:** the sound effects and the narrator share one session: `.playback`, mode `.default`, `.mixWithOthers`. It's never deactivated while the app runs; deactivating it after each narration stopped the effects engine.
+**Trade-off:** music from other apps keeps playing at full volume under the narration (no ducking), and sounds play with the silent switch on (D-012). The Settings toggles (Agent voice, Sound effects) are the off switches.
+
+## D-026 — Certificate sharing without a new permission (pending Bill) <a id="d-026"></a>
+
+The share sheet's "Save Image" (save to Photos) crashes the app unless Info.plist has `NSPhotoLibraryAddUsageDescription`. That's a new permission, and the spec says to ask first.
+**For now:** the app uses its own share sheet with Save to Photos (plus Assign to Contact and Reading List) excluded. Messages, AirDrop, Mail, Files and other apps still work.
+**Pending:** Bill decides whether to add the "add to Photos" usage string.
+
 ---
 
 ## Spec issues
@@ -298,7 +359,7 @@ The boot screen text says ≈2.5 GB. A Qwen3-VL-2B Q4 GGUF plus its mmproj file 
 
 Template checks can gate the build: they run as unit tests in `MonsterCore`, so `swift test` and `xcodebuild test` fail on a hit. The "50 generated dossiers" check needs the model running on the phone, so it can't gate a Mac build.
 **Proposal:** an on-device debug harness in M3 generates 50 dossiers, runs the same checker, and its result is logged in PROGRESS.md.
-**Status:** proposed.
+**Status:** done in M3 as `-MSRunNotesCheck` (50 AI field notes; see PROGRESS.md for the result).
 
 ### S-5 — "b7824 or newer" is not new enough <a id="s-5"></a>
 
@@ -309,7 +370,7 @@ Checked 2026-10-21. CVE-2026-33298 is as the spec says (GGUF tensor-size integer
 ### S-6 — Chaos Mode has no milestone <a id="s-6"></a>
 
 Section 4.2b doesn't say when Chaos Mode ships. It needs the model, so it's placed in M3.
-**Status:** proposed.
+**Status:** done in M3 ([D-023](#d-023)).
 
 ### S-7 — Shake to rescan <a id="s-7"></a>
 

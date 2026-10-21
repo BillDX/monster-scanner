@@ -4,6 +4,43 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — M3: the AI dossier, and a lot more fun
+
+**Changed**
+
+- Tried four AI-dossier designs on the Mac. Shipped the funniest reliable one: hand-written dossier, code-written exhibit jokes from what the AI spotted, subspecies titles, and AI field notes as an experimental switch ([D-022](DECISIONS.md#d-022)).
+- Chaos Mode ([D-023](DECISIONS.md#d-023)), with a CHAOS MODE stamp and a code-vs-chaos tally.
+- Fun pack pulled forward from M4 ([D-024](DECISIONS.md#d-024)), three parts built by helper agents in separate worktrees:
+  - sound effects synthesised in code
+  - per-monster reveal effects
+  - Burn the Evidence
+  - the Certificate of Monsterhood
+  - shake for a Second Opinion
+  - random boot checks and joke lines in the scan
+- Strict kindness mode now also covers hair and body words (found by the 50-note check).
+- Engine: optional repetition penalty; the free sample stays in C (grammar check per token).
+- Telemetry speeds up once results are in, so extra jokes don't make the scan drag. The scan ends by 10 s, then a 1.1 s drumroll blackout. The shutter-to-reveal time is logged on the Debug screen.
+- Audio: one shared session for narrator and effects ([D-025](DECISIONS.md#d-025)). Certificate sharing leaves out Save to Photos pending a permission decision ([D-026](DECISIONS.md#d-026)).
+
+**Measured (iPhone 14 Pro, Debug build)**
+
+- 10-scan soak (test photos, back to back on the charger): no crash; shutter to reveal 7.3–9.1 s; peak 953 MB. The phone reached thermal "fair" at scan 6 and "serious" at scan 8; scans 9–10 fell back to Classic as designed.
+- 50 AI field notes through the strict checker (S-4): 187 sentences kept, 13 dropped, **0 unkind sentences kept**, 0 notes empty. Quality is uneven; the feature stays off by default.
+- Simulator (stub observer): the full sequence renders: scan with observer lines, drumroll blackout, red flash and bats, settle; the certificate renders well.
+- 69 core tests pass; simulator and iPhone builds have no warnings.
+
+**Not verified**
+
+- Sounds have not been heard by a person, only measured.
+- The share sheet hasn't been tapped through.
+- Chaos Mode on real photos.
+
+**Next**
+
+- Bill: real scans with sound on; try Chaos Mode; decide on the Save-to-Photos permission.
+
+---
+
 ## 2026-10-21 — Playful observer: speed on the iPhone
 
 **Changed**
