@@ -4,6 +4,28 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — Fix: nearly every subject was a robot
+
+**Found by Bill** on the first real scans with the AI observer.
+
+**Changed**
+
+- Rebalanced the clue table and lowered the human threshold to 3.6; added 7 daytime-friendly clues (now 47). Details and before/after numbers in [D-020](DECISIONS.md#d-020).
+- Added a realistic party-photo mix to the tests (evening and daytime) and a balance test that fails if any verdict wins over 27% or under 4%.
+- The neutral test fixture moved from 14:00 to 10:00 so the new afternoon clue doesn't fire on it.
+
+**Measured**
+
+- Before: Robot won 41% of simulated daytime scans. After: every verdict 5–23% by evening and by day, Human 13%.
+- Real iPhone photos score about 190–650 on the sharpness measure, so "unnaturally sharp" now needs 1,500.
+- 49 tests pass. Installed on Bill's iPhone.
+
+**Next**
+
+- Bill: a few more real scans to confirm the variety feels right (Settings → Debug log shows each scan's scores).
+
+---
+
 ## 2026-10-21 — M2: first benchmark on the iPhone 14 Pro
 
 **Measured (Debug build, 4 Memoji test photos)**

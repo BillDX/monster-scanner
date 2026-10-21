@@ -83,3 +83,69 @@ enum Fixtures {
         }
     }
 }
+
+extension Fixtures {
+    /// A believable mix of party photos: mostly level heads, lots of smiles,
+    /// common shirt colours, glasses fairly common, mostly evenings indoors.
+    /// Used to check that no verdict dominates in real use.
+    static func realistic(count: Int, seed: UInt64 = 7, daytime: Bool = false) -> [ScanEvidence] {
+        var rng = SeededRandom(seed: seed)
+        func u() -> Double { rng.unit() }
+        func weighted<T>(_ items: [(T, Double)]) -> T {
+            let total = items.reduce(0) { $0 + $1.1 }
+            var r = u() * total
+            for (item, w) in items { r -= w; if r <= 0 { return item } }
+            return items.last!.0
+        }
+        func normal() -> Double { // Box–Muller
+            sqrt(-2 * log(max(1e-9, u()))) * cos(2 * .pi * u())
+        }
+        return (0..<count).map { _ in
+            evidence { m, o in
+                o.expression = daytime
+                    ? weighted([(.smiling, 40), (.serious, 42), (.surprised, 5), (.sillyFace, 6), (.sleepy, 3), (.unknown, 4)])
+                    : weighted([(.smiling, 45), (.serious, 30), (.surprised, 6), (.sillyFace, 8), (.sleepy, 4), (.unknown, 7)])
+                o.shirtColor = weighted([("black", 20), ("white", 13), ("navy blue", 9), ("light blue", 5), ("gray", 11),
+                                         ("red", 6), ("green", 5), ("brown", 4), ("beige", 4), ("pink", 4), ("yellow", 3),
+                                         ("purple", 3), ("orange", 2), ("red plaid flannel", 2), ("unknown", 9)])
+                var worn: [Accessory] = []
+                if u() < 0.30 { worn.append(.glasses) }
+                if u() < 0.04 { worn.append(.sunglasses) }
+                if u() < 0.08 { worn.append(.hat) } else if u() < 0.04 { worn.append(.hood) }
+                if u() < 0.04 { worn.append(.headphones) }
+                if u() < 0.15 { worn.append(.earrings) }
+                if u() < 0.10 { worn.append(.necklace) }
+                if u() < 0.04 { worn.append(.scarf) }
+                o.accessories = Array(worn.prefix(3))
+                o.hairColor = worn.contains(.hat) || worn.contains(.hood) ? .hidden
+                    : weighted([(.brown, 40), (.black, 30), (.blonde, 15), (.gray, 8), (.red, 4), (.dyedOther, 3)])
+                o.backgroundHint = weighted([("living room", 40), ("kitchen", 15), ("bar", 10), ("party", 10),
+                                             ("garden", 8), ("city street", 7), ("beach", 3), ("unknown", 7)])
+                // Selfies are closer than group shots.
+                m.faceAreaFraction = min(0.6, max(0.01, weighted([(0.04, 25), (0.08, 30), (0.14, 25), (0.22, 12), (0.32, 5), (0.42, 3)])
+                                                  * (0.8 + 0.4 * u())))
+                m.faceCenterOffset = abs(normal()) * 0.12
+                m.headRollDegrees = normal() * (daytime ? 3.5 : 5)
+                m.headYawDegrees = normal() * 12
+                m.brightness = min(0.95, max(0.05, 0.42 + normal() * 0.13))
+                m.blurVariance = exp(log(daytime ? 700 : 450) + normal() * 0.6) // daylight photos are sharper
+                m.moonIllumination = u()
+                // Party hours, with some daytime.
+                let hour = daytime
+                    ? weighted([(10, 10), (11, 15), (12, 20), (13, 20), (14, 15), (15, 10), (16, 10)])
+                    : weighted([(12, 6), (15, 8), (17, 8), (19, 14), (20, 16), (21, 16), (22, 14), (23, 10), (0, 5), (1, 3)])
+                m.minutesSinceMidnight = hour * 60 + Int(u() * 60)
+                m.batteryLevel = u() < 0.1 ? 0.05 + u() * 0.14 : 0.2 + u() * 0.8
+                m.shirtHueDegrees = nil
+            }
+        }
+    }
+
+    static func spread(_ evidence: [ScanEvidence]) -> [Monster: Double] {
+        var counts: [Monster: Int] = [:]
+        for (i, e) in evidence.enumerated() {
+            counts[VerdictEngine.decide(e, seed: seed(i)).monster, default: 0] += 1
+        }
+        return counts.mapValues { Double($0) / Double(evidence.count) }
+    }
+}

@@ -37,7 +37,7 @@ public struct Measurements: Codable, Sendable, Equatable {
         brightness: Double = 0.5,
         blurVariance: Double = 400,
         moonIllumination: Double = 0.5,
-        minutesSinceMidnight: Int = 14 * 60,
+        minutesSinceMidnight: Int = 10 * 60,
         batteryLevel: Double? = 0.8,
         shirtHueDegrees: Double? = nil
     ) {
@@ -65,7 +65,8 @@ public struct Measurements: Codable, Sendable, Equatable {
 
     /// Blur thresholds for a ≤512 px image. Tune on device (see DECISIONS.md).
     public static let blurryBelow: Double = 60
-    public static let sharpAbove: Double = 900
+    /// Real iPhone face regions measure about 200-1,000 at 512 px.
+    public static let sharpAbove: Double = 1_500
 
     public var isBlurry: Bool { blurVariance < Self.blurryBelow }
     public var isRazorSharp: Bool { blurVariance > Self.sharpAbove }

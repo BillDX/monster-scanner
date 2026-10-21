@@ -78,7 +78,7 @@ The spec's protocol returns `Observations`. Apple's current SDKs already ship a 
 
 - Each clue has a weight of 1–3.5 points; some scale with how strongly they apply (moon fullness, head tilt, frame fill).
 - Anomaly factor: 0–2 points per monster, from the seed.
-- Human threshold: 4 points. One weak clue (≤ 2 points) can never beat it; two medium clues always do.
+- Human threshold: **3.6** points (was 4; see [D-020](#d-020)). One weak clue (≤ 1.5 points) can never beat it.
 - Confidence: 51 + 46 × (1 − e^(−margin/3)) plus a seeded wobble of 0–2.9 points, clamped to 51–99.9. Margin = lead over the runner-up + a quarter of the winning score. Without the wobble, strong photos all landed on 99.6% and Second Opinion looked broken.
 - The seed is SHA-256 of the downscaled RGBA pixel bytes plus the calibration number. Pixel bytes rather than JPEG bytes, so encoder differences between iOS versions can't change a verdict.
 
@@ -192,6 +192,34 @@ Measured on the Mac with `Tools/LlamaProbe` (M3 Max, Memoji test photos):
 
 **Choice:** before the model is loaded for the first time in each app launch, every file is hashed and compared with the pin. A mismatch deletes the files, and the app falls back to Classic until it is downloaded again. Downloads are also hashed as each file lands.
 **Reason:** this is the spec's "verify before load, refuse unverified files". The cost on the phone is measured in the M2 benchmark; if it's too slow, the fallback plan is to hash once after download and keep a size + date marker.
+
+## D-020 — Rebalanced after "nearly everyone is a robot" <a id="d-020"></a>
+
+**Problem (Bill, first real scans, 2026-10-21, around lunchtime):** almost every subject came out ROBOT.
+**Cause:** Robot's clues described an ordinary photo. A neutral face (2 points), head within 2° of level (2) and a sharp iPhone photo (1.5) add up to 5.5, over the threshold of 4. Most other monsters need something unusual, and in daytime every night-time clue is off. My earlier tests used random clue combinations, not realistic photos, so they missed it.
+
+**Measured:** a realistic party-photo mix in the tests (smiles, common shirt colours, glasses, mostly level heads, by evening and by day) reproduced it: **Robot won 41% of daytime scans**. Real iPhone photos measure about 190–650 on the face-region sharpness score (Simulator sample photos at 512 px), so the old "unnaturally sharp" cut-off of 900 was set from cartoon-like test images.
+
+**Changes**
+
+- Robot's everyday clues are weaker or rarer: serious face 2 → 1.5; level head now < 1° (was < 2°) at 1.5; "unnaturally sharp" needs 1,500 (was 900) and is worth 1; blue or white shirt 2 → 1.5.
+- Vampire's black or red shirt 2.5 → 2 (black shirts are very common).
+- New daytime clues, all about timing, clothes or framing, so daytime scans vary too:
+  - Vampire: indoors in daylight
+  - Alien: a loud yellow, purple, pink or orange shirt
+  - Kaiju: lunchtime (11:30–14:00)
+  - Zombie: afternoon slump (14–17); also "way past bedtime" (01–05)
+  - Ghost: drifting at the edge of the frame; slightly soft focus. White shirt 2.5 → 3.
+- Human threshold 4 → 3.6.
+
+**Result on the realistic mix (5,000 photos each)**
+
+| | Vampire | Alien | Kaiju | Werewolf | Zombie | Robot | Ghost | Human |
+|---|---|---|---|---|---|---|---|---|
+| Evening | 23% | 13% | 7% | 21% | 7% | 9% | 6% | 13% |
+| Daytime | 20% | 12% | 14% | 12% | 9% | 15% | 5% | 13% |
+
+A new test (`BalanceTests`) fails the build if any monster wins more than 27% or less than 4% of either mix, or if Human leaves 8–25%. The mix is my estimate of real photos; it should be checked against real scans.
 
 ---
 

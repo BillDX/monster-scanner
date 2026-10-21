@@ -42,7 +42,7 @@ Exit check: the full game loop works in airplane mode.
 - ✅ Image prep: downscale (512 px analysis, 1024 px display), orientation applied, all metadata dropped; largest face used. Face crop for the model moves to M2.
 - ✅ Code measurements: face size %, head tilt, brightness, blur (Laplacian variance), moon phase, local hour, battery, colour sampling (hair/shirt)
 - ✅ Verdict engine: per-monster scoring, seeded anomaly factor (SHA-256 of image bytes + calibration), human threshold, confidence 51–99.9 %, top 3 clues
-- ✅ Clue table expanded (40 clues); clues limited to clothing, accessories, setting, timing, pose ([S-9](DECISIONS.md#s-9))
+- ✅ Clue table expanded (47 clues after the [D-020](DECISIONS.md#d-020) rebalance); clues limited to clothing, accessories, setting, timing, pose ([S-9](DECISIONS.md#s-9))
 - ✅ Dossier templates as JSON: 8 per verdict incl. human (64 total)
 - ✅ Scanning sequence: radar sweep, probability gauge, Core Haptics heartbeat, telemetry lines with real values
 - ✅ Reveal: blackout + haptic spike, verdict card, typewriter dossier paced to the AVSpeechSynthesizer voice, readings, clues
@@ -64,6 +64,8 @@ Exit check: the DECISIONS.md benchmark table is filled in.
 - ✅ Observation JSON call (grammar-constrained, [D-017](DECISIONS.md#d-017)), retry once, parser tested against 20 malformed outputs
 - ✅ 20 s timeout plus scan deadline ([D-018](DECISIONS.md#d-018)), thermal-state fallback, memory-warning unload, background unload, boot prewarm
 - ✅ Benchmark harness (Debug screen and `-MSRunBenchmark` flag); first run on the iPhone 14 Pro done
+- ✅ Fixed "nearly everyone is a robot" from Bill's first real scans; balance test added ([D-020](DECISIONS.md#d-020))
+- ⏸ Bill re-tries real scans with the rebalanced build
 - ⏸ Bill provides 10 hand-labelled photos for the accuracy column
 - ⬜ Evaluate Qwen3-VL-2B (llama.cpp), then Qwen3.5-2B; MLX fallback if the primary misses budget
 - ✅ Investigate `increased-memory-limit` entitlement: not needed (peak 958 MB)

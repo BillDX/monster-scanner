@@ -33,7 +33,7 @@ public struct Verdict: Sendable, Equatable, Codable {
 /// seed always give the same verdict (spec section 4.2).
 public enum VerdictEngine {
     /// If no monster's total reaches this, the subject is CERTIFIED HUMAN.
-    public static let humanThreshold = 4.0
+    public static let humanThreshold = 3.6
     /// Anomaly factor range added to each monster's score. Big enough for
     /// "Second Opinion" to flip close calls, too small to beat a strong clue.
     public static let maxAnomaly = 2.0

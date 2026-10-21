@@ -34,9 +34,9 @@ struct VerdictEngineTests {
 
     @Test("Second Opinion can flip a close call")
     func secondOpinionFlipsCloseCalls() {
-        // Vampire 4.0 (black shirt + shadows) vs zombie 4.5 (sleepy + dim).
+        // Vampire 5.0 (black shirt + shadows + scarf) vs zombie 4.5 (sleepy + dim).
         let close = Fixtures.evidence { m, o in
-            o.shirtColor = "black"; o.expression = .sleepy
+            o.shirtColor = "black"; o.expression = .sleepy; o.accessories = [.scarf]
             m.brightness = 0.2
         }
         let verdicts = Set((0..<50).map { VerdictEngine.decide(close, seed: Fixtures.seed($0)).monster })
@@ -64,7 +64,7 @@ struct VerdictEngineTests {
 
     @Test("One weak clue can't beat the human threshold")
     func weakClueStaysHuman() {
-        // Zombie "dim" is worth 1.5; 1.5 + max anomaly 2.0 < 4.0.
+        // Zombie "dim" is worth 1.5; 1.5 + max anomaly (under 2.0) < 3.6.
         let evidence = Fixtures.evidence { m, _ in m.brightness = 0.28 }
         for calibration in 0..<100 {
             #expect(VerdictEngine.decide(evidence, seed: Fixtures.seed(calibration)).monster == .human)
@@ -73,8 +73,8 @@ struct VerdictEngineTests {
 
     @Test("Clue points at the threshold always produce a monster")
     func atThresholdIsMonster() {
-        // Robot: serious 2 + blue shirt 2 = 4.0.
-        let evidence = Fixtures.evidence { _, o in o.expression = .serious; o.shirtColor = "blue" }
+        // Robot: serious 1.5 + blue shirt 1.5 + level head 1.5 = 4.5 ≥ 3.6.
+        let evidence = Fixtures.evidence { m, o in o.expression = .serious; o.shirtColor = "blue"; m.headRollDegrees = 0.5 }
         for calibration in 0..<100 {
             #expect(VerdictEngine.decide(evidence, seed: Fixtures.seed(calibration)).monster != .human)
         }
@@ -160,7 +160,9 @@ struct VerdictEngineTests {
     @Test("Verdict spread across random photos includes every outcome")
     func spread() {
         var counts: [Monster: Int] = [:]
-        for (index, evidence) in Fixtures.random(count: 2_000).enumerated() {
+        // Realistic photos: the stress-test mix above stacks so many clues that
+        // a human verdict can't happen, which says nothing about real use.
+        for (index, evidence) in Fixtures.realistic(count: 2_000).enumerated() {
             counts[VerdictEngine.decide(evidence, seed: Fixtures.seed(index)).monster, default: 0] += 1
         }
         for monster in Monster.allCases {

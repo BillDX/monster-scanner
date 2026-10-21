@@ -14,7 +14,7 @@ enum ClueBook {
 
     static let vampire: [ClueRule] = [
         ClueRule(
-            id: "vampire.shirt", monster: .vampire, weight: 2.5,
+            id: "vampire.shirt", monster: .vampire, weight: 2,
             strength: { [.black, .red].contains($0.observations.shirtFamily) ? 1 : 0 },
             evidence: { "a \(Fmt.shirt($0)) shirt" },
             quip: { "Wardrobe: \(Fmt.shirt($0)). Extremely cape-compatible." }
@@ -46,6 +46,14 @@ enum ClueBook {
             quip: { "Ambient light \(Fmt.pct($0.measurements.brightness)). Lurking-grade shadows." }
         ),
         ClueRule(
+            id: "vampire.daylight", monster: .vampire, weight: 1,
+            strength: {
+                (9..<17).contains($0.measurements.hour) && $0.observations.setting == .indoors ? 1 : 0
+            },
+            evidence: { "a suspicious indoor hideout at \($0.measurements.clockText)" },
+            quip: { "Indoors at \($0.measurements.clockText) in broad daylight. Avoiding the sun?" }
+        ),
+        ClueRule(
             id: "vampire.collar", monster: .vampire, weight: 1.5,
             strength: { !$0.observations.wornAccessories.isDisjoint(with: [.scarf, .necklace]) ? 1 : 0 },
             evidence: { _ in "a very elegant neckline accessory" },
@@ -61,6 +69,12 @@ enum ClueBook {
             strength: { [.green, .silver].contains($0.observations.shirtFamily) ? 1 : 0 },
             evidence: { "a \(Fmt.shirt($0)) shirt" },
             quip: { "Shirt: \(Fmt.shirt($0)). Standard mothership issue." }
+        ),
+        ClueRule(
+            id: "alien.loudshirt", monster: .alien, weight: 2,
+            strength: { [.yellow, .purple, .pink, .orange].contains($0.observations.shirtFamily) ? 1 : 0 },
+            evidence: { "a dazzling \(Fmt.shirt($0)) shirt" },
+            quip: { "Shirt: \(Fmt.shirt($0)). Clearly not from around here." }
         ),
         ClueRule(
             id: "alien.tilt", monster: .alien, weight: 3,
@@ -128,6 +142,12 @@ enum ClueBook {
             strength: { $0.observations.setting == .outdoors ? 1 : 0 },
             evidence: { _ in "plenty of open terrain" },
             quip: { "Setting: \($0.observations.backgroundHint). Plenty of room to stomp." }
+        ),
+        ClueRule(
+            id: "kaiju.lunch", monster: .kaiju, weight: 1.5,
+            strength: { (690..<840).contains($0.measurements.minutesSinceMidnight) ? 1 : 0 },
+            evidence: { "a lunchtime photo at \($0.measurements.clockText)" },
+            quip: { "Photo taken at \($0.measurements.clockText). Lunchtime for giant lizards." }
         ),
         ClueRule(
             id: "kaiju.roar", monster: .kaiju, weight: 2.5,
@@ -203,6 +223,18 @@ enum ClueBook {
             quip: { "Photo taken at \($0.measurements.clockText). Pre-coffee undead." }
         ),
         ClueRule(
+            id: "zombie.slump", monster: .zombie, weight: 1.5,
+            strength: { (14..<17).contains($0.measurements.hour) ? 1 : 0 },
+            evidence: { "an afternoon-slump photo at \($0.measurements.clockText)" },
+            quip: { "Photo taken at \($0.measurements.clockText). Afternoon slump detected." }
+        ),
+        ClueRule(
+            id: "zombie.latenight", monster: .zombie, weight: 1.5,
+            strength: { (1..<5).contains($0.measurements.hour) ? 1 : 0 },
+            evidence: { "a photo taken way past bedtime (\($0.measurements.clockText))" },
+            quip: { "Photo taken at \($0.measurements.clockText). Way past bedtime. Shambling likely." }
+        ),
+        ClueRule(
             id: "zombie.dim", monster: .zombie, weight: 1.5,
             strength: { $0.measurements.brightness < 0.3 ? 1 : 0 },
             evidence: { _ in "crypt-level lighting" },
@@ -237,13 +269,13 @@ enum ClueBook {
 
     static let robot: [ClueRule] = [
         ClueRule(
-            id: "robot.serious", monster: .robot, weight: 2,
+            id: "robot.serious", monster: .robot, weight: 1.5,
             strength: { $0.observations.expression == .serious ? 1 : 0 },
             evidence: { _ in "a perfectly neutral expression" },
             quip: { _ in "Expression: serious. Emotion module not installed." }
         ),
         ClueRule(
-            id: "robot.shirt", monster: .robot, weight: 2,
+            id: "robot.shirt", monster: .robot, weight: 1.5,
             strength: { [.blue, .white].contains($0.observations.shirtFamily) ? 1 : 0 },
             evidence: { "a \(Fmt.shirt($0)) shirt" },
             quip: { "Shirt: \(Fmt.shirt($0)). Factory default finish." }
@@ -255,16 +287,16 @@ enum ClueBook {
             quip: { _ in "Headphones detected. Possibly a charging cable." }
         ),
         ClueRule(
-            id: "robot.level", monster: .robot, weight: 2,
+            id: "robot.level", monster: .robot, weight: 1.5,
             strength: {
                 guard let t = $0.measurements.headTilt else { return 0 }
-                return t < 2 ? 1 : 0
+                return t < 1 ? 1 : 0
             },
             evidence: { "a \(Fmt.deg($0.measurements.headTilt ?? 0)) head tilt" },
             quip: { "Head tilt \(Fmt.deg($0.measurements.headTilt ?? 0)). Suspiciously level. Gyroscope confirmed." }
         ),
         ClueRule(
-            id: "robot.sharp", monster: .robot, weight: 1.5,
+            id: "robot.sharp", monster: .robot, weight: 1,
             strength: { $0.measurements.isRazorSharp ? 1 : 0 },
             evidence: { _ in "unnaturally crisp edges" },
             quip: { "Sharpness index \(Int($0.measurements.blurVariance)). Edges too crisp for organic matter." }
@@ -281,7 +313,7 @@ enum ClueBook {
 
     static let ghost: [ClueRule] = [
         ClueRule(
-            id: "ghost.shirt", monster: .ghost, weight: 2.5,
+            id: "ghost.shirt", monster: .ghost, weight: 3,
             strength: { $0.observations.shirtFamily == .white ? 1 : 0 },
             evidence: { _ in "a white shirt" },
             quip: { _ in "Shirt: white. Bedsheet-adjacent." }
@@ -299,6 +331,12 @@ enum ClueBook {
             quip: { "Blur index \(Int($0.measurements.blurVariance)). Subject partially phased out of this dimension." }
         ),
         ClueRule(
+            id: "ghost.soft", monster: .ghost, weight: 1.5,
+            strength: { $0.measurements.blurVariance < 160 && !$0.measurements.isBlurry ? 1 : 0 },
+            evidence: { _ in "a slightly soft-focus subject" },
+            quip: { "Blur index \(Int($0.measurements.blurVariance)). Edges fading out of this dimension." }
+        ),
+        ClueRule(
             id: "ghost.faint", monster: .ghost, weight: 2,
             strength: {
                 guard let a = $0.measurements.faceAreaFraction else { return 0 }
@@ -306,6 +344,12 @@ enum ClueBook {
             },
             evidence: { _ in "a barely-there presence in the frame" },
             quip: { "Subject covers \(Fmt.pct($0.measurements.faceAreaFraction ?? 0)) of the frame. Fading from this plane." }
+        ),
+        ClueRule(
+            id: "ghost.edge", monster: .ghost, weight: 2,
+            strength: { ($0.measurements.faceCenterOffset ?? 0) > 0.18 ? 1 : 0 },
+            evidence: { _ in "a subject drifting at the edge of the frame" },
+            quip: { _ in "Subject drifting at the edge of the frame. Haunting the margins." }
         ),
         ClueRule(
             id: "ghost.witching", monster: .ghost, weight: 2,
