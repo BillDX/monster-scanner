@@ -121,6 +121,41 @@ All of this runs on the phone; nothing is stored.
 **Choice:** in Debug builds, the launch argument `-MSDebugScan <path>` skips boot and consent (without saving consent) and scans that image file. Compiled out of Release builds.
 **Reason:** the Simulator has no camera, and its sample photos have no people in them. This made it possible to test the whole pipeline headlessly. It will also be the starting point for the M2 benchmark harness.
 
+## D-015 — M2 pre-flight: pinned runtime and model files <a id="d-015"></a>
+
+Checked 2026-10-21 against the GitHub and Hugging Face APIs and the NIST CVE database. **Nothing downloaded yet.**
+
+**Runtime A: llama.cpp prebuilt xcframework (MIT)**
+
+| | |
+|---|---|
+| Release | `b11799` (published 2026-10-21; llama.cpp ships a build per merged change) |
+| Asset | `llama-b11799-xcframework.zip`, 66.8 MB |
+| SHA-256 | `9fa07281f680fb38251b45e4e4fcc7cfc74288325461be1dcdc77311efef9809` (GitHub's asset digest; re-check after download) |
+| Contents (from `build-xcframework.sh` at that tag) | static libraries, Metal on, **mtmd vision library included** with `mtmd.h` / `mtmd-helper.h`, iOS minimum 16.4, RPC backend not built |
+| Architectures at that tag | `qwen3vl` and `qwen35` text models, `QWEN3VL` vision projector |
+
+**Primary model: Qwen3-VL-2B-Instruct, official `Qwen/Qwen3-VL-2B-Instruct-GGUF` (Apache 2.0), repo commit `52d6c8ffea26cc873ac5ad116f8631268d7eb503`**
+
+| File | Size | SHA-256 |
+|---|---|---|
+| `Qwen3VL-2B-Instruct-Q4_K_M.gguf` | 1,107.4 MB | `089d75c52f4b7ffc56ba998ffc50aae89fcafc755f9e7208aacca281dca6c2ae` |
+| `mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf` (first choice) | 445.1 MB | `f9a68fabba69c3b81e153367b2c7521030b0fa8bb0de400c9599c8e6725f9c82` |
+| `mmproj-Qwen3VL-2B-Instruct-F16.gguf` (if Q8_0 hurts accuracy) | 819.4 MB | `c3d5afbef5287953acd57b4043d2269456e5761a4eaccb3b71b062996970aea5` |
+
+Download for the first choice: **about 1.55 GB** (resolves [S-3](#s-3)).
+
+**Upgrade candidate: Qwen3.5-2B (Apache 2.0)**
+
+- Qwen publishes `Qwen/Qwen3.5-2B` but **no official GGUF** (as you found).
+- Most-used community GGUF: `unsloth/Qwen3.5-2B-GGUF`, repo commit `f6d5376be1edb4d416d56da11e5397a961aca8ae`:
+  - `Qwen3.5-2B-Q4_K_M.gguf`, 1,280.8 MB, `aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223`
+  - `mmproj-F16.gguf`, 668.2 MB, `7035e9cb8d7c6a9681d07eef9a364783e86ea4cd73faab2eabb4f43a101830c7`
+  - About 1.95 GB. **Needs Bill's approval before use** (publisher: Unsloth).
+- MLX route: `ml-explore/mlx-swift-lm` **3.32.3** (2026-09-30) has a Qwen3.5 vision model (`Libraries/MLXVLM/Models/Qwen35.swift`), so Qwen3.5 runs on Runtime B. Weights: `mlx-community/Qwen3.5-2B-4bit`, 1.75 GB.
+
+**Order of work** (unchanged from the spec): Qwen3-VL-2B on llama.cpp first; Qwen3.5-2B only if it beats it on accuracy at acceptable speed; MLX only if llama.cpp misses the budget or Qwen3.5 needs it.
+
 ---
 
 ## Spec issues
@@ -143,8 +178,8 @@ Section 4.2 says every clue must be about clothing, accessories, setting, timing
 ### S-3 — Model download size <a id="s-3"></a>
 
 The boot screen text says ≈2.5 GB. A Qwen3-VL-2B Q4 GGUF plus its mmproj file is likely closer to 1.5–2 GB.
-**Proposal:** the downloader shows the exact size from the pinned model manifest instead of a hard-coded number. Measure in M2.
-**Status:** to verify in M2.
+**Proposal:** the downloader shows the exact size from the pinned model manifest instead of a hard-coded number.
+**Status:** resolved 2026-10-21: the pinned Qwen3-VL-2B files total about 1.55 GB ([D-015](#d-015)).
 
 ### S-4 — "Fail the build" on banned content <a id="s-4"></a>
 
@@ -152,11 +187,11 @@ Template checks can gate the build: they run as unit tests in `MonsterCore`, so 
 **Proposal:** an on-device debug harness in M3 generates 50 dossiers, runs the same checker, and its result is logged in PROGRESS.md.
 **Status:** proposed.
 
-### S-5 — llama.cpp release and CVE not yet verified <a id="s-5"></a>
+### S-5 — "b7824 or newer" is not new enough <a id="s-5"></a>
 
-Release `b7824` and CVE-2026-33298 haven't been checked yet.
-**Plan:** at the start of M2, confirm against the llama.cpp GitHub release notes and the advisory before downloading anything, then record the exact tag and the xcframework's SHA-256 here.
-**Status:** to verify in M2.
+Checked 2026-10-21. CVE-2026-33298 is as the spec says (GGUF tensor-size integer overflow → heap overflow, CVSS 7.8, fixed in b7824). But a later advisory, **CVE-2026-27940** (high: integer overflow in `gguf_init_from_file_impl`, a bypass of an earlier fix), affects everything up to **b8145** and is fixed in **b8146**. CVE-2026-34159 (critical) is in the RPC backend, which the iOS xcframework doesn't build.
+**Proposal:** minimum llama.cpp version is **b8146**; pin `b11799` ([D-015](#d-015)). Before each future pin bump, re-check the llama.cpp security advisories.
+**Status:** proposed; applied to the pin.
 
 ### S-6 — Chaos Mode has no milestone <a id="s-6"></a>
 
@@ -188,7 +223,7 @@ Camera and Metal model performance can only be tested on the phone. In the Simul
 
 | Option | Runtime + release | Model files (SHA-256 pinned) | Download | Load time | Peak memory | s / scan | Valid JSON (of 10) | Attribute accuracy | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| Qwen3-VL-2B Q4 | llama.cpp b____ | | | | | | | | |
+| Qwen3-VL-2B Q4_K_M + mmproj Q8_0 | llama.cpp b11799 | | | | | | | | |
 | Qwen3.5-2B Q4 | llama.cpp or MLX | | | | | | | | |
 | Qwen3-VL-2B 4-bit | mlx-swift-lm (only if needed) | | | | | | | | |
 | Qwen3.5-0.8B (only if 2B misses latency) | | | | | | | | | |

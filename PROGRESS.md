@@ -4,6 +4,26 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — M2 pre-flight
+
+**Changed**
+
+- Pinned the runtime and model files with sizes and SHA-256 ([D-015](DECISIONS.md#d-015)). No downloads yet.
+
+**Measured / found**
+
+- llama.cpp latest is b11799; its xcframework includes the mtmd vision library and Metal, and supports iOS 16.4+.
+- The spec's minimum b7824 is too old: CVE-2026-27940 needs b8146 ([S-5](DECISIONS.md#s-5)).
+- Real download for Qwen3-VL-2B (Q4_K_M + Q8_0 vision file) is about 1.55 GB, not 2.5 GB ([S-3](DECISIONS.md#s-3)).
+- Qwen3.5-2B: no official GGUF; Unsloth's community GGUF is about 1.95 GB. mlx-swift-lm 3.32.3 supports Qwen3.5 with vision; `mlx-community/Qwen3.5-2B-4bit` is 1.75 GB.
+- PocketPal (latest v1.20.1) supports vision models, so the same files can be tried there.
+
+**Next**
+
+- Bill: try Qwen3-VL-2B Q4_K_M + mmproj in PocketPal on the iPhone; approve the downloads.
+
+---
+
 ## 2026-10-21 — M1 closed, M2 started
 
 **Changed**

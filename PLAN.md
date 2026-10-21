@@ -4,7 +4,7 @@ Milestones, tasks and status. Keep this in step with [PROGRESS.md](PROGRESS.md):
 
 Status key: ✅ done · 🟡 in progress · ⏸ waiting on Bill · ⬜ not started
 
-**Current milestone: M2 — pre-flight (research done before any model code).**
+**Current milestone: M2 — pre-flight done; waiting for Bill's PocketPal check and download approval.**
 
 ---
 
@@ -55,7 +55,10 @@ Exit check: the full game loop works in airplane mode.
 Exit check: the DECISIONS.md benchmark table is filled in.
 
 - ⏸ Bill sanity-checks the GGUF in PocketPal on the iPhone first
-- ⬜ Verify llama.cpp release (b7824 or newer, CVE-2026-33298 fix); pin tag + SHA-256 ([S-5](DECISIONS.md#s-5))
+- ✅ Verify llama.cpp release and CVEs; pinned b11799 + SHA-256 (minimum raised to b8146, [S-5](DECISIONS.md#s-5))
+- ✅ Pin Qwen3-VL-2B GGUF + mmproj files and hashes; check Qwen3.5-2B options ([D-015](DECISIONS.md#d-015))
+- ⏸ Bill approves downloading the pinned files (xcframework 67 MB, model 1.55 GB)
+- ⏸ Bill approves (or not) the community Qwen3.5-2B GGUF from Unsloth, when we get there
 - ⬜ `ObservationModel` protocol; `ClassicObservationModel` and `LlamaCppObservationModel`
 - ⬜ Model downloader: official HF org over HTTPS, Wi-Fi by default, size shown, pinned SHA-256 checked before load
 - ⬜ Observation JSON call, retry once, parser tested against 20 malformed outputs
