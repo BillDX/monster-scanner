@@ -42,42 +42,48 @@ struct VerdictEngineTests {
         let verdicts = Set((0..<50).map { VerdictEngine.decide(close, seed: Fixtures.seed($0)).monster })
         #expect(verdicts.contains(.vampire))
         #expect(verdicts.contains(.zombie))
-        #expect(!verdicts.contains(.human))
     }
 
     // MARK: Reachability and thresholds
 
-    @Test("Every verdict is reachable, whatever the calibration", arguments: Monster.allCases)
+    @Test("Strong evidence usually wins, and every verdict is reachable", arguments: Monster.allCases)
     func everyMonsterReachable(_ monster: Monster) throws {
+        // Since D-027 luck and wild cards can overturn even strong evidence now and then.
         let evidence = try #require(Fixtures.strong[monster])
-        for calibration in 0..<50 {
-            #expect(VerdictEngine.decide(evidence, seed: Fixtures.seed(calibration)).monster == monster)
-        }
+        let wins = (0..<100).filter { VerdictEngine.decide(evidence, seed: Fixtures.seed($0)).monster == monster }.count
+        #expect(wins >= (monster == .human ? 55 : 70), "\(monster) won \(wins)/100")
     }
 
-    @Test("Nothing suspicious means CERTIFIED HUMAN")
+    @Test("Nothing suspicious means CERTIFIED HUMAN, unless a wild card fires")
     func neutralIsHuman() {
-        for calibration in 0..<100 {
-            #expect(VerdictEngine.decide(Fixtures.neutral, seed: Fixtures.seed(calibration)).monster == .human)
+        var humans = 0
+        for calibration in 0..<200 {
+            let verdict = VerdictEngine.decide(Fixtures.neutral, seed: Fixtures.seed(calibration))
+            if verdict.monster == .human { humans += 1 } else { #expect(verdict.wildcard == verdict.monster) }
         }
+        #expect(humans >= 110, "\(humans)/200")
     }
 
-    @Test("One weak clue can't beat the human threshold")
+    @Test("One weak clue mostly stays human")
     func weakClueStaysHuman() {
-        // Zombie "dim" is worth 1.5; 1.5 + max anomaly (under 2.0) < 3.6.
-        let evidence = Fixtures.evidence { m, _ in m.brightness = 0.28 }
-        for calibration in 0..<100 {
-            #expect(VerdictEngine.decide(evidence, seed: Fixtures.seed(calibration)).monster == .human)
-        }
+        let evidence = Fixtures.evidence { m, _ in m.brightness = 0.28 } // zombie "dim", 1.5 points
+        let humans = (0..<200).filter { VerdictEngine.decide(evidence, seed: Fixtures.seed($0)).monster == .human }.count
+        #expect(humans >= 100, "\(humans)/200")
     }
 
-    @Test("Clue points at the threshold always produce a monster")
+    @Test("Several clues mostly produce that monster")
     func atThresholdIsMonster() {
-        // Robot: serious 1.5 + blue shirt 1.5 + level head 1.5 = 4.5 ≥ 3.6.
         let evidence = Fixtures.evidence { m, o in o.expression = .serious; o.shirtColor = "blue"; m.headRollDegrees = 0.5 }
-        for calibration in 0..<100 {
-            #expect(VerdictEngine.decide(evidence, seed: Fixtures.seed(calibration)).monster != .human)
-        }
+        let robots = (0..<200).filter { VerdictEngine.decide(evidence, seed: Fixtures.seed($0)).monster == .robot }.count
+        #expect(robots >= 70, "\(robots)/200") // the top result, but far from certain
+    }
+
+    @Test("Wild cards happen about a third of the time and are recorded")
+    func wildCards() {
+        let verdicts = (0..<1_000).map { VerdictEngine.decide(Fixtures.neutral, seed: Fixtures.seed($0)) }
+        let wild = verdicts.filter { $0.wildcard != nil }.count
+        #expect((250...400).contains(wild), "\(wild)/1000")
+        for verdict in verdicts where verdict.wildcard != nil { #expect(verdict.wildcard == verdict.monster) }
     }
 
     // MARK: Output shape
@@ -97,7 +103,11 @@ struct VerdictEngineTests {
 
     @Test("Real clues come first, strongest first")
     func clueOrdering() throws {
-        let verdict = VerdictEngine.decide(try #require(Fixtures.strong[.vampire]), seed: Fixtures.seed(3))
+        let evidence = try #require(Fixtures.strong[.vampire])
+        let seed = try #require((0..<50).map { Fixtures.seed($0) }.first {
+            VerdictEngine.decide(evidence, seed: $0).monster == .vampire
+        })
+        let verdict = VerdictEngine.decide(evidence, seed: seed)
         let points = verdict.clues.map(\.points)
         #expect(points == points.sorted(by: >))
         #expect(verdict.clues.allSatisfy { !$0.isAnomaly })

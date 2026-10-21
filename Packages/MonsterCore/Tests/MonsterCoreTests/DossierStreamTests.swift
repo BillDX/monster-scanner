@@ -181,3 +181,60 @@ struct ExhibitTests {
         #expect(variety.count > 4)
     }
 }
+
+@Suite("The Bureau's reasoning")
+struct ReasoningTests {
+    @Test("Five-ish steps that end in the verdict, are kind, and fill every slot")
+    func chains() {
+        for (index, evidence) in (Fixtures.realistic(count: 300) + Fixtures.random(count: 300)).enumerated() {
+            let verdict = VerdictEngine.decide(evidence, seed: Fixtures.seed(index))
+            let steps = Reasoning.chain(for: verdict, evidence: evidence)
+            #expect((4...5).contains(steps.count))
+            let title = verdict.monster == .human ? "HUMAN" : verdict.monster.rawValue.uppercased()
+            #expect(steps.last?.contains(title) == true, "\(steps)")
+            for step in steps {
+                #expect(!step.contains("{") && !step.contains("}"), "\(step)")
+                #expect(ContentPolicy.isAllowed(step), "\(ContentPolicy.violations(in: step)): \(step)")
+                #expect(step.first?.isUppercase == true || step.first?.isNumber == true, "\(step)")
+            }
+        }
+    }
+
+    @Test("Same verdict, same reasoning; a wild card gets its own twist")
+    func determinismAndWildcards() {
+        let evidence = Profiles.bill(3)
+        let verdict = VerdictEngine.decide(evidence, seed: Fixtures.seed(1))
+        #expect(Reasoning.chain(for: verdict, evidence: evidence) == Reasoning.chain(for: verdict, evidence: evidence))
+        let wild = (0..<200).map { VerdictEngine.decide(evidence, seed: Fixtures.seed($0)) }
+            .first { $0.wildcard != nil && $0.monster != .human }
+        if let wild {
+            let steps = Reasoning.chain(for: wild, evidence: evidence)
+            let twists = Reasoning.wildcardTwists.map { $0.prefix(12) }
+            #expect(steps.contains { step in twists.contains { step.hasPrefix($0) } }, "\(steps)")
+        }
+    }
+
+    @Test("Every monster has five habits in all three forms")
+    func habits() {
+        for monster in Monster.allCases {
+            let list = Reasoning.habits[monster] ?? []
+            #expect(list.count == 5)
+            for habit in list {
+                #expect(!habit.base.isEmpty && !habit.past.isEmpty && habit.ing.contains("ing"), "\(habit)")
+            }
+        }
+    }
+}
+
+@Suite("A or an")
+struct ArticleTests {
+    @Test(arguments: [
+        ("80% full moon", "an 80% full moon"), ("64% full moon", "a 64% full moon"),
+        ("11.0° head tilt", "an 11.0° head tilt"), ("1.0° head tilt", "a 1.0° head tilt"),
+        ("orange shirt", "an orange shirt"), ("navy blue shirt", "a navy blue shirt"),
+        ("uniform", "a uniform"), ("umbrella", "an umbrella"), ("110% reading", "a 110% reading"),
+    ])
+    func articles(phrase: String, expected: String) {
+        #expect(Fmt.a(phrase) == expected)
+    }
+}

@@ -16,13 +16,13 @@ enum ClueBook {
         ClueRule(
             id: "vampire.shirt", monster: .vampire, weight: 2,
             strength: { [.black, .red].contains($0.observations.shirtFamily) ? 1 : 0 },
-            evidence: { "a \(Fmt.shirt($0)) shirt" },
+            evidence: { Fmt.a("\(Fmt.shirt($0)) shirt") },
             quip: { "Wardrobe: \(Fmt.shirt($0)). Extremely cape-compatible." }
         ),
         ClueRule(
             id: "vampire.night", monster: .vampire, weight: 2,
             strength: { $0.measurements.hour >= 21 || $0.measurements.hour < 4 ? 1 : 0 },
-            evidence: { "a photo taken at \($0.measurements.clockText)" },
+            evidence: { Fmt.a("photo taken at \($0.measurements.clockText)") },
             quip: { "Photo taken at \($0.measurements.clockText). Prime nocturnal hours." }
         ),
         ClueRule(
@@ -36,7 +36,7 @@ enum ClueBook {
         ClueRule(
             id: "vampire.battery", monster: .vampire, weight: 2.5,
             strength: { ($0.measurements.batteryLevel ?? 1) < 0.2 ? 1 : 0 },
-            evidence: { "a phone battery at \(Fmt.pct($0.measurements.batteryLevel ?? 0))" },
+            evidence: { Fmt.a("phone battery at \(Fmt.pct($0.measurements.batteryLevel ?? 0))") },
             quip: { "Battery at \(Fmt.pct($0.measurements.batteryLevel ?? 0)). Life force drained." }
         ),
         ClueRule(
@@ -50,7 +50,7 @@ enum ClueBook {
             strength: {
                 (9..<17).contains($0.measurements.hour) && $0.observations.setting == .indoors ? 1 : 0
             },
-            evidence: { "a suspicious indoor hideout at \($0.measurements.clockText)" },
+            evidence: { Fmt.a("suspicious indoor hideout at \($0.measurements.clockText)") },
             quip: { "Indoors at \($0.measurements.clockText) in broad daylight. Avoiding the sun?" }
         ),
         ClueRule(
@@ -67,19 +67,19 @@ enum ClueBook {
         ClueRule(
             id: "alien.shirt", monster: .alien, weight: 2.5,
             strength: { [.green, .silver].contains($0.observations.shirtFamily) ? 1 : 0 },
-            evidence: { "a \(Fmt.shirt($0)) shirt" },
+            evidence: { Fmt.a("\(Fmt.shirt($0)) shirt") },
             quip: { "Shirt: \(Fmt.shirt($0)). Standard mothership issue." }
         ),
         ClueRule(
             id: "alien.loudshirt", monster: .alien, weight: 2,
             strength: { [.yellow, .purple, .pink, .orange].contains($0.observations.shirtFamily) ? 1 : 0 },
-            evidence: { "a dazzling \(Fmt.shirt($0)) shirt" },
+            evidence: { Fmt.a("dazzling \(Fmt.shirt($0)) shirt") },
             quip: { "Shirt: \(Fmt.shirt($0)). Clearly not from around here." }
         ),
         ClueRule(
             id: "alien.tilt", monster: .alien, weight: 3,
             strength: { Fmt.ramp($0.measurements.headTilt ?? 0, from: 12, to: 25) },
-            evidence: { "a \(Fmt.deg($0.measurements.headTilt ?? 0)) head tilt" },
+            evidence: { Fmt.a("\(Fmt.deg($0.measurements.headTilt ?? 0)) head tilt") },
             quip: { "Head tilt \(Fmt.deg($0.measurements.headTilt ?? 0)). Antenna alignment in progress." }
         ),
         ClueRule(
@@ -119,7 +119,7 @@ enum ClueBook {
         ClueRule(
             id: "kaiju.size", monster: .kaiju, weight: 3.5,
             strength: { Fmt.ramp($0.measurements.faceAreaFraction ?? 0, from: 0.35, to: 0.5) },
-            evidence: { "a looming close-up filling \(Fmt.pct($0.measurements.faceAreaFraction ?? 0)) of the frame" },
+            evidence: { Fmt.a("looming close-up filling \(Fmt.pct($0.measurements.faceAreaFraction ?? 0)) of the frame") },
             quip: { "Subject fills \(Fmt.pct($0.measurements.faceAreaFraction ?? 0)) of the frame. Dangerously close to the city." }
         ),
         ClueRule(
@@ -134,7 +134,7 @@ enum ClueBook {
         ClueRule(
             id: "kaiju.shirt", monster: .kaiju, weight: 2,
             strength: { [.green, .gray].contains($0.observations.shirtFamily) ? 1 : 0 },
-            evidence: { "a \(Fmt.shirt($0)) shirt" },
+            evidence: { Fmt.a("\(Fmt.shirt($0)) shirt") },
             quip: { "Shirt: \(Fmt.shirt($0)). Scaly camouflage." }
         ),
         ClueRule(
@@ -146,7 +146,7 @@ enum ClueBook {
         ClueRule(
             id: "kaiju.lunch", monster: .kaiju, weight: 1.5,
             strength: { (690..<840).contains($0.measurements.minutesSinceMidnight) ? 1 : 0 },
-            evidence: { "a lunchtime photo at \($0.measurements.clockText)" },
+            evidence: { Fmt.a("lunchtime photo at \($0.measurements.clockText)") },
             quip: { "Photo taken at \($0.measurements.clockText). Lunchtime for giant lizards." }
         ),
         ClueRule(
@@ -163,7 +163,7 @@ enum ClueBook {
         ClueRule(
             id: "werewolf.moon", monster: .werewolf, weight: 3.5,
             strength: { Fmt.ramp($0.measurements.moonIllumination, from: 0.85, to: 0.98) },
-            evidence: { "a \(Fmt.pct($0.measurements.moonIllumination)) full moon" },
+            evidence: { Fmt.a("\(Fmt.pct($0.measurements.moonIllumination)) full moon") },
             quip: { "Moon \(Fmt.pct($0.measurements.moonIllumination)) full. DANGER." }
         ),
         ClueRule(
@@ -187,7 +187,7 @@ enum ClueBook {
                 let woodsy = ["plaid", "flannel", "check", "tartan"].contains { name.contains($0) }
                 return woodsy || [.brown, .orange].contains($0.observations.shirtFamily) ? 1 : 0
             },
-            evidence: { "a \(Fmt.shirt($0)) shirt" },
+            evidence: { Fmt.a("\(Fmt.shirt($0)) shirt") },
             quip: { "Shirt: \(Fmt.shirt($0)). Excellent forest camouflage." }
         ),
         ClueRule(
@@ -219,7 +219,7 @@ enum ClueBook {
         ClueRule(
             id: "zombie.dawn", monster: .zombie, weight: 3,
             strength: { (5..<8).contains($0.measurements.hour) ? 1 : 0 },
-            evidence: { "a photo taken at \($0.measurements.clockText)" },
+            evidence: { Fmt.a("photo taken at \($0.measurements.clockText)") },
             quip: { "Photo taken at \($0.measurements.clockText). Pre-coffee undead." }
         ),
         ClueRule(
@@ -231,7 +231,7 @@ enum ClueBook {
         ClueRule(
             id: "zombie.latenight", monster: .zombie, weight: 1.5,
             strength: { (1..<5).contains($0.measurements.hour) ? 1 : 0 },
-            evidence: { "a photo taken way past bedtime (\($0.measurements.clockText))" },
+            evidence: { Fmt.a("photo taken way past bedtime (\($0.measurements.clockText))") },
             quip: { "Photo taken at \($0.measurements.clockText). Way past bedtime. Shambling likely." }
         ),
         ClueRule(
@@ -246,13 +246,13 @@ enum ClueBook {
                 let t = $0.measurements.headTilt ?? 0
                 return t >= 6 && t <= 12 ? 1 : 0
             },
-            evidence: { "a \(Fmt.deg($0.measurements.headTilt ?? 0)) head loll" },
+            evidence: { Fmt.a("\(Fmt.deg($0.measurements.headTilt ?? 0)) head loll") },
             quip: { "Head angle \(Fmt.deg($0.measurements.headTilt ?? 0)). Mild shamble detected." }
         ),
         ClueRule(
             id: "zombie.drab", monster: .zombie, weight: 1.5,
             strength: { [.gray, .brown, .beige].contains($0.observations.shirtFamily) ? 1 : 0 },
-            evidence: { "a \(Fmt.shirt($0)) shirt" },
+            evidence: { Fmt.a("\(Fmt.shirt($0)) shirt") },
             quip: { "Shirt: \(Fmt.shirt($0)). Very 'just dug my way out'." }
         ),
         ClueRule(
@@ -277,7 +277,7 @@ enum ClueBook {
         ClueRule(
             id: "robot.shirt", monster: .robot, weight: 1.5,
             strength: { [.blue, .white].contains($0.observations.shirtFamily) ? 1 : 0 },
-            evidence: { "a \(Fmt.shirt($0)) shirt" },
+            evidence: { Fmt.a("\(Fmt.shirt($0)) shirt") },
             quip: { "Shirt: \(Fmt.shirt($0)). Factory default finish." }
         ),
         ClueRule(
@@ -292,7 +292,7 @@ enum ClueBook {
                 guard let t = $0.measurements.headTilt else { return 0 }
                 return t < 1 ? 1 : 0
             },
-            evidence: { "a \(Fmt.deg($0.measurements.headTilt ?? 0)) head tilt" },
+            evidence: { Fmt.a("\(Fmt.deg($0.measurements.headTilt ?? 0)) head tilt") },
             quip: { "Head tilt \(Fmt.deg($0.measurements.headTilt ?? 0)). Suspiciously level. Gyroscope confirmed." }
         ),
         ClueRule(
@@ -354,7 +354,7 @@ enum ClueBook {
         ClueRule(
             id: "ghost.witching", monster: .ghost, weight: 2,
             strength: { $0.measurements.hour < 3 ? 1 : 0 },
-            evidence: { "a photo taken at \($0.measurements.clockText)" },
+            evidence: { Fmt.a("photo taken at \($0.measurements.clockText)") },
             quip: { "Photo taken at \($0.measurements.clockText). The witching hour." }
         ),
     ]

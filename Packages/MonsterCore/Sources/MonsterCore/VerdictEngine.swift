@@ -6,8 +6,10 @@ public struct MonsterScore: Sendable, Equatable, Codable {
     public let cluePoints: Double
     /// Seeded random "anomaly factor".
     public let anomaly: Double
+    /// Wild-card boost (0 unless this monster got the inexplicable reading).
+    public var wildcard: Double = 0
 
-    public var total: Double { cluePoints + anomaly }
+    public var total: Double { cluePoints + anomaly + wildcard }
 }
 
 public struct Verdict: Sendable, Equatable, Codable {
@@ -24,6 +26,8 @@ public struct Verdict: Sendable, Equatable, Codable {
     public let trueAgeYears: Int
     /// "K9-4821"
     public let caseNumber: String
+    /// Set when an inexplicable "wild card" reading boosted a monster (D-027).
+    public var wildcard: Monster? = nil
 
     /// "87.3%"
     public var confidenceText: String { String(format: "%.1f%%", confidence) }
@@ -32,13 +36,44 @@ public struct Verdict: Sendable, Equatable, Codable {
 /// Picks the verdict. Pure, deterministic and seeded: the same evidence and
 /// seed always give the same verdict (spec section 4.2).
 public enum VerdictEngine {
+    /// The engine's knobs, grouped so the tests can compare settings (D-027).
+    public struct Tuning: Sendable {
+        public var humanThreshold: Double
+        public var maxAnomaly: Double
+        public var wildcardChance: Double
+        public var wildcardBoost: Double
+        /// Clue points are squashed toward this ceiling (diminishing returns),
+        /// so piling up ordinary clues can't lock in one verdict. 0 = off.
+        public var evidenceCeiling: Double
+
+        public func effective(_ points: Double) -> Double {
+            evidenceCeiling > 0 ? evidenceCeiling * (1 - exp(-points / evidenceCeiling)) : points
+        }
+    }
+
     /// If no monster's total reaches this, the subject is CERTIFIED HUMAN.
-    public static let humanThreshold = 3.6
-    /// Anomaly factor range added to each monster's score. Big enough for
-    /// "Second Opinion" to flip close calls, too small to beat a strong clue.
-    public static let maxAnomaly = 2.0
+    public static let humanThreshold = 3.8
+    /// Anomaly factor range added to each monster's score. Big enough to
+    /// flip close calls and keep rescans of the same outfit varied (D-027).
+    public static let maxAnomaly = 3.0
+    /// Chance (per seed) of an inexplicable reading that boosts a random monster.
+    public static let wildcardChance = 0.35
+    public static let wildcardBoost = 3.0
+    /// Diminishing returns: clue points p count as 4·(1 − e^(−p/4)), so
+    /// a pile of ordinary clues (blue shirt + level head + neutral face) can't
+    /// lock in one verdict for someone rescanning the same outfit (D-027).
+    public static let evidenceCeiling = 4.0
+
+    public static let standard = Tuning(
+        humanThreshold: humanThreshold, maxAnomaly: maxAnomaly, wildcardChance: wildcardChance,
+        wildcardBoost: wildcardBoost, evidenceCeiling: evidenceCeiling
+    )
 
     public static func decide(_ evidence: ScanEvidence, seed: UInt64) -> Verdict {
+        decide(evidence, seed: seed, tuning: standard)
+    }
+
+    public static func decide(_ evidence: ScanEvidence, seed: UInt64, tuning: Tuning) -> Verdict {
         var rng = SeededRandom(seed: seed)
 
         // 1. Score every monster. Fixed iteration order keeps this deterministic.
@@ -48,12 +83,19 @@ public enum VerdictEngine {
                 cluesByMonster[rule.monster, default: []].append(clue)
             }
         }
-        let scores = Monster.scorable.map { monster in
+        var scores = Monster.scorable.map { monster in
             MonsterScore(
                 monster: monster,
-                cluePoints: (cluesByMonster[monster] ?? []).reduce(0) { $0 + $1.points },
-                anomaly: rng.unit() * maxAnomaly
+                cluePoints: tuning.effective((cluesByMonster[monster] ?? []).reduce(0) { $0 + $1.points }),
+                anomaly: rng.unit() * tuning.maxAnomaly
             )
+        }
+        // The wild card: now and then the scanner just has a feeling.
+        var wild: Monster?
+        if rng.unit() < tuning.wildcardChance {
+            let index = Int(rng.next() % UInt64(scores.count))
+            scores[index].wildcard = tuning.wildcardBoost
+            wild = scores[index].monster
         }
 
         // 2. Highest total wins; ties go to the earlier monster in the list.
@@ -70,8 +112,8 @@ public enum VerdictEngine {
         let wobble = rng.unit() * 2.9
 
         // 3. Human if nothing cleared the threshold.
-        guard best.total >= humanThreshold else {
-            let confidence = clampConfidence(51 + 46 * (1 - best.total / humanThreshold) + wobble)
+        guard best.total >= tuning.humanThreshold else {
+            let confidence = clampConfidence(51 + 46 * (1 - best.total / tuning.humanThreshold) + wobble)
             return Verdict(
                 monster: .human, confidence: confidence,
                 clues: humanClues(nearMiss: best, rng: &rng),
@@ -91,7 +133,8 @@ public enum VerdictEngine {
 
         return Verdict(
             monster: best.monster, confidence: confidence, clues: clues,
-            scores: scores, seed: seed, trueAgeYears: trueAge, caseNumber: caseNumber
+            scores: scores, seed: seed, trueAgeYears: trueAge, caseNumber: caseNumber,
+            wildcard: wild == best.monster ? wild : nil
         )
     }
 

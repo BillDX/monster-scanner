@@ -62,6 +62,25 @@ enum Fmt {
         return min(1, floor + (1 - floor) * (x - from) / (to - from))
     }
 
+    /// "a" or "an" in front of a phrase: "an 80% full moon", "an orange shirt",
+    /// "a 64% full moon", "a uniform".
+    static func a(_ phrase: String) -> String {
+        let lower = phrase.lowercased()
+        guard let first = lower.first else { return phrase }
+        let an: Bool
+        if first.isNumber {
+            let digits = lower.prefix { $0.isNumber }
+            an = digits.hasPrefix("8") || digits == "11" || digits == "18"
+        } else if "aeio".contains(first) {
+            an = true
+        } else if first == "u" {
+            an = !["uni", "use", "usu", "uk"].contains { lower.hasPrefix($0) }
+        } else {
+            an = lower.hasPrefix("hour") || lower.hasPrefix("honest")
+        }
+        return (an ? "an " : "a ") + phrase
+    }
+
     static func shirt(_ e: ScanEvidence) -> String {
         let name = e.observations.shirtColor.trimmingCharacters(in: .whitespaces).lowercased()
         return (name.isEmpty || name == "unknown") ? e.observations.shirtFamily.displayName : name
