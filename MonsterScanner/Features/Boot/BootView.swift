@@ -1,25 +1,31 @@
 import MonsterCore
 import SwiftUI
 
-/// Fake BIOS boot sequence. In M0 this is the whole app; later milestones
-/// hand off to the consent gate and scanner from here.
+/// Fake BIOS boot sequence. Tap to skip.
 struct BootView: View {
+    @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var visibleLines = 0
 
-    private let lines = [
-        "BUREAU OF SECRET MONSTER AFFAIRS",
-        "FIELD SCANNER BIOS v0.1.0",
-        "",
-        "Calibrating ectoplasm sensors… OK",
-        "Polishing garlic detectors… OK",
-        "Aligning alien antenna array… OK",
-        "Charging silver-bullet capacitors… OK",
-        "Consulting the moon… OK",
-        "",
-        "AI MODEL: NOT INSTALLED",
-        "MODE: CLASSIC (backup crystals)",
-    ]
+    private var lines: [String] {
+        [
+            "BUREAU OF SECRET MONSTER AFFAIRS",
+            "FIELD SCANNER BIOS v\(Self.version)",
+            "",
+            "Calibrating ectoplasm sensors… OK",
+            "Polishing garlic detectors… OK",
+            "Aligning alien antenna array… OK",
+            "Charging silver-bullet capacitors… OK",
+            "Consulting the moon… \(Int((MoonPhase.illumination(at: .now) * 100).rounded()))% FULL",
+            "",
+            "AI MODEL: NOT INSTALLED",
+            "MODE: \(app.modeLabel)",
+        ]
+    }
+
+    static var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -31,49 +37,44 @@ struct BootView: View {
             }
 
             if visibleLines >= lines.count {
-                roster
-                    .padding(.top, 24)
-                    .transition(.opacity)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("KNOWN ENTITIES ON FILE")
+                        .font(Theme.mono(.caption, weight: .bold))
+                        .foregroundStyle(Theme.alert)
+                        .crtGlow(Theme.alert, radius: 4)
+                    Text(Monster.allCases.map(\.emoji).joined(separator: "  "))
+                        .font(.title)
+                        .accessibilityLabel("Known entities: " + Monster.allCases.map(\.rawValue).joined(separator: ", "))
+                }
+                .padding(.top, 24)
+                .transition(.opacity)
             }
 
             Spacer()
 
-            Text("BUILD M0 · SCANNER ARRIVES IN M1")
-                .font(Theme.mono(.caption2))
+            Text(visibleLines >= lines.count ? "TAP TO CONTINUE" : "TAP TO SKIP")
+                .font(Theme.mono(.caption, weight: .bold))
                 .foregroundStyle(Theme.dimNeon)
+                .frame(maxWidth: .infinity)
         }
         .padding(20)
         .crtScreen()
+        .contentShape(Rectangle())
+        .onTapGesture { app.finishBoot() }
+        .accessibilityAction(named: "Continue") { app.finishBoot() }
         .task { await runBootSequence() }
     }
 
-    private var roster: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("KNOWN ENTITIES ON FILE")
-                .font(Theme.mono(.caption, weight: .bold))
-                .foregroundStyle(Theme.alert)
-                .crtGlow(Theme.alert, radius: 4)
-            Text(Monster.allCases.map(\.emoji).joined(separator: "  "))
-                .font(.title)
-                .accessibilityLabel(
-                    "Known entities: " + Monster.allCases.map(\.rawValue).joined(separator: ", ")
-                )
-        }
-    }
-
     private func runBootSequence() async {
-        guard !reduceMotion else {
+        if reduceMotion {
             visibleLines = lines.count
-            return
+        } else {
+            for index in lines.indices {
+                try? await Task.sleep(for: .milliseconds(lines[index].isEmpty ? 100 : 230))
+                withAnimation(.easeOut(duration: 0.15)) { visibleLines = index + 1 }
+            }
         }
-        for index in lines.indices {
-            try? await Task.sleep(for: .milliseconds(lines[index].isEmpty ? 120 : 260))
-            withAnimation(.easeOut(duration: 0.15)) { visibleLines = index + 1 }
-        }
+        try? await Task.sleep(for: .seconds(1.6))
+        app.finishBoot()
     }
-}
-
-#Preview {
-    BootView()
-        .preferredColorScheme(.dark)
 }

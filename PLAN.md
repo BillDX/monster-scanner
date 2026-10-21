@@ -4,7 +4,7 @@ Milestones, tasks and status. Keep this in step with [PROGRESS.md](PROGRESS.md):
 
 Status key: ✅ done · 🟡 in progress · ⏸ waiting on Bill · ⬜ not started
 
-**Current milestone: M1 — in progress.**
+**Current milestone: M1 — built, waiting for Bill's on-device check.**
 
 ---
 
@@ -33,18 +33,20 @@ Exit check: the app builds and runs on the iPhone 14 Pro.
 
 Exit check: the full game loop works in airplane mode.
 
-- ⬜ Consent gate (first launch + Settings), stored in UserDefaults
-- ⬜ Camera: AVFoundation preview, front/back switch, shutter, torch "UV lamp"
-- ⬜ Vision: face rectangles, landmarks, roll/yaw; live face-tracking reticle
-- ⬜ PhotosPicker import (camera denied, and the Simulator path) with EXIF timestamp read
-- ⬜ Image prep: largest-face crop, downscale to ≤512 px, strip all metadata
-- 🟡 Code measurements: face size %, head tilt, brightness, blur (Laplacian variance), moon phase, local hour, battery, colour sampling (hair/shirt) — maths done and tested in MonsterCore; Vision/camera side next
+- ⏸ Bill: run the device checklist in README → "Testing M1 on your iPhone"
+
+- ✅ Consent gate (first launch + Settings), stored in UserDefaults
+- 🟡 Camera: AVFoundation preview, front/back switch, shutter, torch "UV lamp", front-camera UV glow — built; needs the phone (Simulator has no camera)
+- ✅ Vision: face rectangles, landmarks, roll/yaw (verified in Simulator); live reticle built, needs the phone
+- ✅ PhotosPicker import (camera denied, and the Simulator path) with EXIF timestamp read
+- ✅ Image prep: downscale (512 px analysis, 1024 px display), orientation applied, all metadata dropped; largest face used. Face crop for the model moves to M2.
+- ✅ Code measurements: face size %, head tilt, brightness, blur (Laplacian variance), moon phase, local hour, battery, colour sampling (hair/shirt)
 - ✅ Verdict engine: per-monster scoring, seeded anomaly factor (SHA-256 of image bytes + calibration), human threshold, confidence 51–99.9 %, top 3 clues
 - ✅ Clue table expanded (40 clues); clues limited to clothing, accessories, setting, timing, pose ([S-9](DECISIONS.md#s-9))
 - ✅ Dossier templates as JSON: 8 per verdict incl. human (64 total)
-- ⬜ Scanning sequence: radar sweep, probability gauge, Core Haptics heartbeat, telemetry lines with real values
-- ⬜ Reveal: blackout + haptic spike, verdict card, typewriter dossier, AVSpeechSynthesizer voice, observations, clues
-- ⬜ Edge cases: no face (Ghost offer), multiple faces (largest), camera denied
+- ✅ Scanning sequence: radar sweep, probability gauge, Core Haptics heartbeat, telemetry lines with real values (haptics need the phone)
+- ✅ Reveal: blackout + haptic spike, verdict card, typewriter dossier paced to the AVSpeechSynthesizer voice, readings, clues
+- ✅ Edge cases: no face (Ghost offer, verified), multiple faces (largest), camera denied (explains + photo picker + Settings link)
 - ✅ Unit tests: determinism, every monster reachable, thresholds incl. human, colour sampler fixtures, moon phase known dates
 - ✅ Content test: every template, clue and telemetry line through the banned-word / banned-topic check
 
@@ -78,7 +80,8 @@ Exit check: feels like a real app.
 - ⬜ Full boot sequence, CRT styling pass, app icon
 - ⬜ Sounds (bundled, royalty-free or self-made)
 - ⬜ Certificate of Monsterhood (ImageRenderer, share sheet only on tap, no metadata)
-- ⬜ Second Opinion, Burn the Evidence, Scan Again, shake to rescan
+- ✅ Second Opinion and Scan Again (pulled into M1)
+- ⬜ Burn the Evidence, shake to rescan
 - ⬜ Case Files (opt-in, encrypted, excluded from backups)
 
 ## M5 — Hardening ⬜

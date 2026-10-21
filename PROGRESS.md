@@ -4,6 +4,38 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — M1 part 2: the app (Classic Mode game loop)
+
+**Changed**
+
+- Photo pipeline: downscale, orientation, metadata stripped; EXIF capture time read for imported photos ([D-011](DECISIONS.md#d-011)).
+- Vision face detection + landmarks, Core Image smile/blink, allow-listed scene labels for accessories and setting, pixel sampling for hair and shirt.
+- Screens: boot (tap to skip), consent gate, scanner (live preview, face reticle, UV lamp/glow, front/back, photo import, pulsing shutter), scanning sequence (radar, gauge, heartbeat haptics, real telemetry), reveal (blackout + haptic spike, verdict card, typewriter dossier paced to the voice, evidence, readings), no-subject Ghost offer, Settings, Debug log.
+- Second Opinion and Scan Again, pulled forward from M4.
+- Debug-only `-MSDebugScan <path>` launch argument for testing without a camera ([D-014](DECISIONS.md#d-014)).
+
+**Measured (Simulator, iPhone 17 / iOS 27)**
+
+- Test photos made from Apple's bundled Memoji sample image on a coloured "shirt", with EXIF time and fake GPS added.
+- Black shirt + EXIF 23:41 → VAMPIRE 80.1 %, case K9-8440. Running it again gave the identical verdict (determinism holds end to end). Shirt read as black, time 23:41 from EXIF, smile detected, face 7 % of frame.
+- Blue shirt + 14:00 → ALIEN 75.2 % (head tilt read as 13.9°).
+- Landscape sample photo → "NO SUBJECT DETECTED. Are they… invisible?"
+- Scan sequence ran about 6 s; reveal and narration worked; the typewriter waits for the voice.
+- `xcodebuild test`: 40 tests pass. Release build for a real iPhone compiles. No networking code in the app.
+- Fixed: the typewriter would have stalled if the voice never started (now stops waiting after 3 s).
+
+**Not verified yet (needs the iPhone)**
+
+- Camera preview, live reticle, torch, front-camera UV glow, shutter, haptics, the real agent voice, airplane mode.
+- Head tilt looked noisy: Vision read the same Memoji head as 0.9° in one photo and 13.9° in another. Probably because it's a cartoon; check on real faces, since 12° triggers the Alien clue.
+- Tapping through Second Opinion, Settings and the Ghost button. The input-injection tool didn't work on the iOS 17.2 simulator, and the iOS 27 one needed your approval while you were away.
+
+**Next**
+
+- Bill: device checklist (README → "Testing M1 on your iPhone"). Then tune thresholds from real photos, and M1 is done.
+
+---
+
 ## 2026-10-21 — M1 part 1: game logic in MonsterCore
 
 **Changed**

@@ -75,6 +75,21 @@ public struct PixelImage: Sendable, Equatable {
         return PixelImage(width: width, height: height, bytes: bytes)
     }
 
+    /// A copy of the pixels inside `region`, or nil if it is under 3×3 pixels.
+    public func cropped(to region: UnitRect) -> PixelImage? {
+        let r = region.clampedToUnit
+        let x0 = Int(r.x * Double(width)), x1 = Int(r.maxX * Double(width))
+        let y0 = Int(r.y * Double(height)), y1 = Int(r.maxY * Double(height))
+        guard x1 - x0 >= 3, y1 - y0 >= 3 else { return nil }
+        var out: [UInt8] = []
+        out.reserveCapacity((x1 - x0) * (y1 - y0) * 4)
+        for y in y0..<y1 {
+            let start = (y * width + x0) * 4
+            out.append(contentsOf: bytes[start..<(start + (x1 - x0) * 4)])
+        }
+        return PixelImage(width: x1 - x0, height: y1 - y0, bytes: out)
+    }
+
     @inline(__always)
     public func pixel(x: Int, y: Int) -> RGB {
         let i = (y * width + x) * 4

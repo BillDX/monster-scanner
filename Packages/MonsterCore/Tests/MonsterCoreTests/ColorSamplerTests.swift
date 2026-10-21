@@ -81,6 +81,18 @@ struct ColorSamplerTests {
         #expect(ColorSampler.dominantColor(in: image, region: top)?.family == .red)
     }
 
+    @Test("Cropping keeps the right pixels")
+    func crop() throws {
+        let size = 64
+        var bytes: [UInt8] = []
+        for y in 0..<size { for _ in 0..<size { bytes += y < size / 2 ? [230, 25, 25, 255] : [25, 40, 200, 255] } }
+        let image = PixelImage(width: size, height: size, bytes: bytes)
+        let bottom = try #require(image.cropped(to: UnitRect(x: 0.25, y: 0.5, width: 0.5, height: 0.5)))
+        #expect(bottom.width == 32 && bottom.height == 32)
+        #expect(ColorSampler.dominantColor(in: bottom, region: Self.whole)?.family == .blue)
+        #expect(image.cropped(to: UnitRect(x: 2, y: 2, width: 1, height: 1)) == nil)
+    }
+
     @Test("Off-frame regions return nothing")
     func offFrame() {
         let image = Self.swatch(RGB(r: 0.5, g: 0.5, b: 0.5))
@@ -126,5 +138,7 @@ struct ColorSamplerTests {
         #expect(Setting(hint: "city park at night") == .outdoors)
         #expect(Setting(hint: "Kitchen") == .indoors)
         #expect(Setting(hint: "unknown") == .unknown)
+        #expect(Setting(hint: "cityscape") == .outdoors)
+        #expect(Setting(hint: "interior room") == .indoors)
     }
 }

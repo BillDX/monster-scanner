@@ -45,12 +45,14 @@ public enum Setting: String, Codable, Sendable {
     private static let outdoorWords: Set<String> = [
         "outdoor", "outdoors", "outside", "park", "street", "beach", "garden", "forest", "woods",
         "sky", "field", "mountain", "mountains", "lake", "river", "sea", "ocean", "yard", "trees",
-        "tree", "snow", "road", "city", "festival", "campsite", "trail", "grass", "sunset",
+        "tree", "snow", "road", "city", "cityscape", "festival", "campsite", "trail", "grass", "sunset",
+        "parking", "skatepark", "amusement",
     ]
     private static let indoorWords: Set<String> = [
         "indoor", "indoors", "inside", "room", "kitchen", "office", "bedroom", "bathroom", "bar",
         "restaurant", "cafe", "living", "hallway", "classroom", "car", "home", "house", "studio",
         "library", "shop", "store", "gym", "party", "couch", "sofa", "wall", "ceiling",
+        "interior", "dining", "nightclub",
     ]
 
     public init(hint: String) {

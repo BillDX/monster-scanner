@@ -6,7 +6,7 @@ A silly, fully offline iPhone party game. Point the camera at a willing friend, 
 
 It is a toy. Scanner readings may be wildly inaccurate.
 
-**Status:** M0 (project setup). See [PLAN.md](PLAN.md) for milestones and [PROGRESS.md](PROGRESS.md) for the log.
+**Status:** M1 (Classic Mode, no AI model yet). See [PLAN.md](PLAN.md) for milestones and [PROGRESS.md](PROGRESS.md) for the log.
 
 ## Requirements
 
@@ -26,6 +26,24 @@ Open `MonsterScanner.xcodeproj`, pick the **MonsterScanner** scheme and an iPhon
 2. Turn on Developer Mode: **Settings → Privacy & Security → Developer Mode**, then restart the phone and confirm. (The option only appears after the phone has been connected to Xcode once.)
 3. In Xcode, pick your iPhone as the run destination and press Run. Xcode registers the phone and creates the signing profile automatically.
 4. If the phone says "Untrusted Developer", open **Settings → General → VPN & Device Management**, tap your developer certificate, and trust it.
+
+### Testing M1 on your iPhone
+
+Run from Xcode onto the iPhone 14 Pro, then:
+
+1. Turn on **airplane mode**. Everything below should still work.
+2. First launch: boot sequence → consent gate → camera permission prompt.
+3. Back camera: the reticle follows a face; the bulb button turns on the torch.
+4. Front camera: the bulb button fills the screen with violet "UV glow" and full brightness; turning it off restores brightness.
+5. Scan a willing friend: heartbeat haptics during the scan, a thump on the reveal, the agent voice reading the dossier.
+6. Second Opinion re-rolls (the number always changes; close calls can flip). Scan Again returns to the camera.
+7. Point the camera at a wall and scan: "No subject detected" → Declare them a Ghost.
+8. Import a photo from the library: the time of day should come from when the photo was taken.
+9. Settings → Debug log: any errors or fallbacks show up here, plus the last scan's raw numbers. Please note any head-tilt readings that look wrong.
+
+### Debug launch argument (Simulator)
+
+Debug builds accept `-MSDebugScan /path/to/image.jpg`, which skips boot and consent and scans that file. Handy because the Simulator has no camera. Not present in Release builds.
 
 ### Tests
 
@@ -47,7 +65,9 @@ Config/Shared.xcconfig     Signing team, bundle ID, version
 MonsterScanner/            App target: SwiftUI screens, camera, Vision, haptics, speech
   App/                     App entry point
   DesignSystem/            Colours, fonts, CRT effects
-  Features/                One folder per screen (Boot, …)
+  Features/                One folder per screen (Boot, Consent, Scanner, Scanning, Reveal, Settings)
+  Pipeline/                Photo prep, Vision, scene labels, Classic Mode measurements
+  Services/                Haptics, narrator voice
   Resources/               Asset catalog, privacy manifest
 Packages/MonsterCore/      Pure Swift game logic + unit tests (no UI)
 Benchmarks/                M2 model benchmark results (photos are never committed)

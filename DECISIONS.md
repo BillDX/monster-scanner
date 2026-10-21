@@ -89,6 +89,38 @@ The spec's protocol returns `Observations`. Apple's current SDKs already ship a 
 **Choice:** `ContentPolicy` holds banned terms grouped by topic (appearance, body shape, ethnicity, health, age mockery, violence, insults), matched as whole words. The unit tests run every template (rendered with clues from 400 simulated photos), every clue line, anomaly line and telemetry line through it.
 **Reason:** simple, readable, and it fails `swift test` / `xcodebuild test` on a hit. From M3 the same checker screens model-written dossiers before display; a failure falls back to a template.
 
+## D-011 — Where Classic Mode readings come from <a id="d-011"></a>
+
+| Reading | Source |
+|---|---|
+| Faces, box, roll, yaw | Vision `VNDetectFaceRectanglesRequest` on the 1024 px image |
+| Mouth open, eyes open | Vision face landmarks (inner lips, eye outlines) |
+| Smiling, eyes closed | Core Image `CIDetector` smile/blink flags (Vision has none) |
+| Expression | smiling → sleepy → surprised → serious, in that order. "silly-face" needs the model. |
+| Accessories, setting | Vision `VNClassifyImageRequest`, reading only an allow-list of labels (eyeglasses, sunglasses, hats, hoodie, headphones, scarf; places like beach, park, kitchen, living room). Other labels are ignored. |
+| Hair colour | Pixel sampling just above the face box; `hidden` if a hat or hood is detected. Readout only (S-2). |
+| Shirt colour | Pixel sampling below the chin (most common colour bucket, at least 30% of pixels) |
+| Eye colour, age band | Not attempted. Shown as "CLASSIFIED". |
+| Blur | Laplacian variance of the face region with margin, so portrait-mode background blur doesn't count |
+
+All of this runs on the phone; nothing is stored.
+
+## D-012 — Narration plays with the silent switch on <a id="d-012"></a>
+
+**Choice:** the audio session uses `.playback` / `.spokenAudio`, ducking other audio. A speaker button on the reveal screen and a Settings toggle turn the voice off.
+**Reason:** it's a party game; a narrator that goes quiet because the ring switch is off feels broken. Easy to flip to `.ambient` if you'd prefer it to respect the switch.
+
+## D-013 — Camera setup <a id="d-013"></a>
+
+- `.photo` preset; the photo size is the smallest the camera offers with a long edge of at least 1600 px. Everything is downscaled to 1024 px anyway, and smaller captures are faster.
+- Portrait via `videoRotationAngle = 90` (iOS 17 API). The front camera is mirrored in the photo too, so it matches the preview.
+- The live reticle runs Vision face rectangles on video frames at most every 0.12 s.
+
+## D-014 — Debug-only scan from a file <a id="d-014"></a>
+
+**Choice:** in Debug builds, the launch argument `-MSDebugScan <path>` skips boot and consent (without saving consent) and scans that image file. Compiled out of Release builds.
+**Reason:** the Simulator has no camera, and its sample photos have no people in them. This made it possible to test the whole pipeline headlessly. It will also be the starting point for the M2 benchmark harness.
+
 ---
 
 ## Spec issues

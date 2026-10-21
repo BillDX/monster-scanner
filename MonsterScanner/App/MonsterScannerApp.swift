@@ -2,10 +2,14 @@ import SwiftUI
 
 @main
 struct MonsterScannerApp: App {
+    @State private var app = AppModel()
+
     var body: some Scene {
         WindowGroup {
-            BootView()
+            RootView()
+                .environment(app)
                 .preferredColorScheme(.dark)
+                .tint(Theme.neon)
         }
     }
 }
