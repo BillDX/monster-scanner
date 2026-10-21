@@ -79,13 +79,14 @@ Problems found in the spec, with a proposed alternative. Status shows whether Bi
 
 iPhone torches are on the back camera only, so "UV lamp" can't use the flashlight while scanning with the front camera.
 **Proposal:** back camera uses the real torch. Front camera shows a "UV glow" instead: the screen around a smaller preview fills with violet light at full brightness (a selfie ring light). If you'd rather keep it simple, the toggle is just hidden on the front camera.
-**Status:** waiting for Bill.
+**Status:** accepted by Bill, 2026-10-21.
 
 ### S-2 — Hair colour as a verdict clue conflicts with "never use body traits" <a id="s-2"></a>
 
 Section 4.2 says every clue must be about clothing, accessories, setting, timing or pose, but the starter table gives Werewolf "hair colour brown or gray". Natural hair colour is a body trait, and gray hair tracks age, which risks "you look old" jokes.
 **Proposal:** hair and eye colour appear only in the neutral observations readout, never as verdict clues. Allowed hair clues are style choices: `hidden` (under a hood or hat) and `dyed-other`. Werewolf loses "brown or gray hair" and gains e.g. "hood or hat" (already listed) and "flannel or plaid shirt".
-**Status:** waiting for Bill.
+**Status:** accepted by Bill, 2026-10-21.
+**Follow-on:** for the same reason, dossiers (templates now, the AI prompt in M3) don't use the `{hair_color}` and `{eye_color}` slots, and don't use `{age_band}` either; the age joke stays in the readout ("Apparent Earth-age: 30s · True age: 412 years").
 
 ### S-3 — Model download size <a id="s-3"></a>
 

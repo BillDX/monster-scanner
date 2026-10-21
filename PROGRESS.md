@@ -4,6 +4,19 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — M0 closed, M1 started
+
+**Changed**
+
+- M0 signed off: Bill ran the app on the iPhone 14 Pro.
+- Accepted S-1 (front-camera "UV glow") and S-2 (hair and eye colour only in the readout, never as clues). Recorded in DECISIONS.md.
+
+**Next**
+
+- M1: Classic Mode game loop.
+
+---
+
 ## 2026-10-21 — M0 project setup
 
 **Changed**

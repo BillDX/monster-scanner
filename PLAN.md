@@ -4,11 +4,11 @@ Milestones, tasks and status. Keep this in step with [PROGRESS.md](PROGRESS.md):
 
 Status key: ✅ done · 🟡 in progress · ⏸ waiting on Bill · ⬜ not started
 
-**Current milestone: M0 — waiting for review.**
+**Current milestone: M1 — in progress.**
 
 ---
 
-## M0 — Project setup 🟡
+## M0 — Project setup ✅
 
 Exit check: the app builds and runs on the iPhone 14 Pro.
 
@@ -19,17 +19,17 @@ Exit check: the app builds and runs on the iPhone 14 Pro.
 - ✅ PLAN.md, PROGRESS.md, DECISIONS.md, README.md
 - ✅ Builds and launches on the iOS 17.2 simulator; tests pass on the iOS 27 simulator
 - ✅ Compiles for a real iPhone (unsigned build)
-- ⏸ Runs on Bill's iPhone 14 Pro (needs the phone connected; see README "Run on your iPhone")
-- ⏸ Answer the open questions below before M1 starts
+- ✅ Runs on Bill's iPhone 14 Pro (confirmed by Bill, 2026-10-21)
+- ✅ Open questions answered (both proposals accepted, 2026-10-21)
 
-### Open questions for Bill
+### Resolved questions
 
-1. **Hair colour as a verdict clue** — conflicts with "never use body traits" ([S-2](DECISIONS.md#s-2)).
-2. **UV lamp on the front camera** — the front camera has no torch ([S-1](DECISIONS.md#s-1)).
+1. **Hair colour as a verdict clue** — hair and eye colour appear only in the readout ([S-2](DECISIONS.md#s-2), accepted).
+2. **UV lamp on the front camera** — screen "UV glow" on the front camera, real torch on the back ([S-1](DECISIONS.md#s-1), accepted).
 
 ---
 
-## M1 — Classic Mode, fully playable without any LLM ⬜
+## M1 — Classic Mode, fully playable without any LLM 🟡
 
 Exit check: the full game loop works in airplane mode.
 
