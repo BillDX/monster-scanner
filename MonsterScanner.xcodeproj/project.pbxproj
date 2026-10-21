@@ -314,6 +314,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Monster Scanner uses the camera to photograph a friend who agreed to be scanned. The photo is analysed on this iPhone and never leaves it.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Lets you save your Certificate of Monsterhood to Photos when you choose Save Image. Monster Scanner never reads your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -359,6 +360,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Monster Scanner uses the camera to photograph a friend who agreed to be scanned. The photo is analysed on this iPhone and never leaves it.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Lets you save your Certificate of Monsterhood to Photos when you choose Save Image. Monster Scanner never reads your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

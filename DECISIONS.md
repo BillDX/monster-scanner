@@ -324,11 +324,13 @@ Bill asked to make the app "really FUN and funny in every way", so these M4 item
 **Choice:** the sound effects and the narrator share one session: `.playback`, mode `.default`, `.mixWithOthers`. It's never deactivated while the app runs; deactivating it after each narration stopped the effects engine.
 **Trade-off:** music from other apps keeps playing at full volume under the narration (no ducking), and sounds play with the silent switch on (D-012). The Settings toggles (Agent voice, Sound effects) are the off switches.
 
-## D-026 — Certificate sharing without a new permission (pending Bill) <a id="d-026"></a>
+## D-026 — Save the certificate to Photos (add-only permission, approved) <a id="d-026"></a>
 
 The share sheet's "Save Image" (save to Photos) crashes the app unless Info.plist has `NSPhotoLibraryAddUsageDescription`. That's a new permission, and the spec says to ask first.
-**For now:** the app uses its own share sheet with Save to Photos (plus Assign to Contact and Reading List) excluded. Messages, AirDrop, Mail, Files and other apps still work.
-**Pending:** Bill decides whether to add the "add to Photos" usage string.
+**Decision (Bill, 2026-10-21):** add it. `NSPhotoLibraryAddUsageDescription` = "Lets you save your Certificate of Monsterhood to Photos when you choose Save Image. Monster Scanner never reads your photo library."
+- It's add-only: the app can save, never read or browse the library. iOS asks the first time Save Image is chosen.
+- The share sheet still leaves out Assign to Contact (would need Contacts access) and Add to Reading List (meaningless for an image).
+- Photo import stays on PhotosPicker, which needs no library permission.
 
 ---
 

@@ -95,4 +95,5 @@ Planned for M2, each pinned and added only after approval: llama.cpp prebuilt `l
 - Photos are analysed on the phone and never leave it. Nothing is written to disk unless you save to Case Files or make a Certificate.
 - Shared images have all metadata and location stripped.
 - No accounts, analytics, ads or crash reporting. No face recognition and no stored face data.
+- Permissions: camera (to scan) and add-only Photos (only if you choose Save Image for a certificate). The app never reads your photo library; imports use the system photo picker.
 - Only scan people who said yes.

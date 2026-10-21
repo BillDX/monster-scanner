@@ -5,8 +5,8 @@ import UniformTypeIdentifiers
 
 /// Preview of the Certificate of Monsterhood with a Share button. The PNG is
 /// rendered only when Share is tapped and goes only to the system share sheet
-/// (spec section 5). "Save to Photos" is left out of the share options: it
-/// would need a new photo-library permission, which needs Bill's OK first.
+/// (spec section 5). "Save Image" works through the add-only photo-library
+/// permission (Bill approved it, DECISIONS.md D-026); the app never reads Photos.
 struct CertificateSheet: View {
     let content: CertificateContent
     @Environment(\.dismiss) private var dismiss
@@ -91,8 +91,8 @@ private struct ActivityView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
         let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        // Saving to Photos needs NSPhotoLibraryAddUsageDescription, a new permission (spec: ask first).
-        controller.excludedActivityTypes = [.saveToCameraRoll, .assignToContact, .addToReadingList]
+        // Save Image uses NSPhotoLibraryAddUsageDescription (add-only, approved by Bill).
+        controller.excludedActivityTypes = [.assignToContact, .addToReadingList]
         return controller
     }
 

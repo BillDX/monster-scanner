@@ -4,6 +4,19 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — Certificate can be saved to Photos
+
+**Changed**
+
+- Bill approved the add-only photo-library permission. Added `NSPhotoLibraryAddUsageDescription` (Debug and Release) and re-enabled Save Image in the certificate share sheet ([D-026](DECISIONS.md#d-026)).
+
+**Measured**
+
+- iPhone build succeeds; the built Info.plist carries both usage strings (camera, photo add). Installed on the iPhone 14 Pro.
+- Not yet tried: tapping Save Image on the phone (iOS will ask for permission the first time).
+
+---
+
 ## 2026-10-21 — M3: the AI dossier, and a lot more fun
 
 **Changed**

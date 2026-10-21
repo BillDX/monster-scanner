@@ -81,7 +81,8 @@ Exit check: 10 consecutive scans, no crash, under 12 s each.
 - ✅ Chaos Mode toggle + banner + code-vs-chaos tally ([D-023](DECISIONS.md#d-023)); ⏸ Bill reports the tally after some scans
 - ✅ On-device: 50 AI field notes through the strict checker: 187 sentences kept, 13 dropped, 0 unkind kept
 - ✅ 10-scan soak on the iPhone: no crash, worst shutter-to-reveal 9.1 s, peak 953 MB; scans 9–10 switched to Classic as the phone got hot
-- ⏸ Bill: real scans with the full fun pack; decide on the Save-to-Photos permission ([D-026](DECISIONS.md#d-026))
+- ⏸ Bill: real scans with the full fun pack
+- ✅ Save-to-Photos (add-only) permission approved and added ([D-026](DECISIONS.md#d-026))
 
 ## M4 — Polish ⬜
 
