@@ -334,6 +334,28 @@ The share sheet's "Save Image" (save to Photos) crashes the app unless Info.plis
 
 ---
 
+## D-027 — More randomness, and the Bureau's after-the-fact reasoning <a id="d-027"></a>
+
+Bill kept getting ROBOT, probably from his navy blue shirt, and asked for "a little more randomness coupled with a silly convoluted rationale (after the fact)".
+A test profile like Bill's scans (navy shirt, neutral or smiling, living room, small head tilt, afternoon) came out robot 62%, human 33%, and almost nothing else.
+**Decision:** loosen the engine, then let the code invent the logic afterwards.
+- **Evidence ceiling.** Clue points now have diminishing returns: `4 × (1 − e^(−points/4))`. One outfit that stacks several robot clues no longer runs away with it.
+- **Bigger anomaly.** The random per-monster nudge goes from up to 2.0 to up to 3.0 points.
+- **Wild card.** On 35% of scans one random monster gets +3 points. If it wins, the scan shows "⚠ INEXPLICABLE READING DETECTED".
+- **Human threshold** 3.6 → 3.8, so CERTIFIED HUMAN stays common (about 1 in 7 overall).
+- Still seeded: the same photo and calibration always give the same verdict. Second Opinion and rescans are where the variety shows.
+- **Result:** Bill-like scans are now robot 36%, human 25%, alien 12%, zombie 10%, and vampire, kaiju, werewolf and ghost 2–4% each. Night and day spreads keep every verdict between 6% and 19%. A test fails if Bill's profile goes over 45% robot or fewer than six verdicts turn up.
+- **The Bureau's reasoning.** A new reveal section under the verdict, shown one numbered step at a time with a blip. It is code-written from pools (`Reasoning.swift`), seeded and checked with the kindness filter:
+  1. a fact from the scan (the shirt or an accessory, more often than time, moon, battery or head tilt),
+  2. a leap to a silly habit ("people who sleep upside down"),
+  3. a bridge from the habit to the verdict, with a made-up statistic,
+  4. a wild-card twist ("a lamp flickered. Classic zombie behaviour.") or one real clue,
+  5. the conclusion ("Ergo: ZOMBIE. Peer-reviewed by a pigeon."). Humans get a disappointed Bureau.
+- Small fix found on the way: clue wording now picks "a" or "an" ("an 80% full moon", "an orange shirt").
+- Not done: the reasoning isn't read aloud (the dossier narration is already long) and isn't on the certificate.
+
+---
+
 ## Spec issues
 
 Problems found in the spec, with a proposed alternative. Status shows whether Bill has decided.

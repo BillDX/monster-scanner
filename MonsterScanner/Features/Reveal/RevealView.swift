@@ -12,6 +12,8 @@ struct RevealView: View {
     @State private var revealCount = 0
     @State private var burning = false
     @State private var showingCertificate = false
+    /// Reasoning steps shown so far; they appear one at a time after the reveal.
+    @State private var reasoningShown = 0
 
     var body: some View {
         ZStack {
@@ -21,6 +23,7 @@ struct RevealView: View {
                         VStack(spacing: 22) {
                             header
                             verdictCard(verdict)
+                            if !session.reasoning.isEmpty { reasoningSection }
                             dossierSection(dossier, verdict: verdict)
                             if app.aiFieldNotes && session.fieldNotesState != .off { fieldNotesSection }
                             cluesSection(verdict)
@@ -68,6 +71,7 @@ struct RevealView: View {
 
     private func reveal() async {
         revealed = false
+        reasoningShown = 0
         guard let monster = session.verdict?.monster else { return }
         SoundFX.shared.play(.drumroll)
         try? await Task.sleep(for: .milliseconds(reduceMotion ? 300 : 1_100))
@@ -76,11 +80,25 @@ struct RevealView: View {
         withAnimation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7)) { revealed = true }
         revealCount += 1
         scheduleImpacts(for: monster)
+        Task { await revealReasoning() }
         if app.aiFieldNotes { session.startFieldNotes() }
         // Let the sting land before Agent K-9 starts talking.
         let sting = SoundFX.shared.isEnabled ? SoundFX.shared.duration(of: .sting(monster)) : 0.6
         try? await Task.sleep(for: .seconds(max(0.6, sting)))
         if app.voiceEnabled, let text = session.narrationText { app.narrator.speak(text) }
+    }
+
+    /// One step of the Bureau's logic at a time, each with a blip.
+    private func revealReasoning() async {
+        let steps = session.reasoning.count
+        guard !reduceMotion else { reasoningShown = steps; return }
+        let calibration = session.calibration
+        try? await Task.sleep(for: .seconds(1.2))
+        while reasoningShown < steps, revealed, !burning, session.calibration == calibration {
+            withAnimation(.easeOut(duration: 0.25)) { reasoningShown += 1 }
+            SoundFX.shared.play(.blip)
+            try? await Task.sleep(for: .seconds(1.1))
+        }
     }
 
     /// Haptic thumps (and the stamp thud) in time with the reveal effect.
@@ -165,6 +183,30 @@ struct RevealView: View {
         .overlay(Rectangle().stroke(Theme.neon.opacity(0.7), lineWidth: 1.5))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Verdict: \(verdict.monster.verdictTitle)\(session.subspecies.map { ", subspecies \($0)" } ?? ""). Confidence \(verdict.confidenceText).")
+    }
+
+    /// Numbered steps laid out from the start (unshown ones transparent), so
+    /// nothing jumps as they appear.
+    private var reasoningSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(title: "THE BUREAU'S REASONING")
+            ForEach(Array(session.reasoning.enumerated()), id: \.offset) { index, step in
+                let isLast = index == session.reasoning.count - 1
+                HStack(alignment: .top, spacing: 10) {
+                    Text("\(index + 1).")
+                        .foregroundStyle(Theme.alert)
+                    Text(step)
+                        .foregroundStyle(Theme.neon)
+                        .fontWeight(isLast ? .bold : .regular)
+                    Spacer(minLength: 0)
+                }
+                .font(Theme.mono(.callout))
+                .opacity(index < reasoningShown ? 1 : 0)
+                .offset(x: index < reasoningShown || reduceMotion ? 0 : -8)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("The Bureau's reasoning. " + session.reasoning.joined(separator: " "))
     }
 
     private func dossierSection(_ dossier: Dossier, verdict: Verdict) -> some View {

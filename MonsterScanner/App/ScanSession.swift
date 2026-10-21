@@ -43,6 +43,8 @@ final class ScanSession {
     private(set) var subspecies: String?
     /// Code-written jokes about what was spotted.
     private(set) var exhibits: [String] = []
+    /// The Bureau's after-the-fact "logic" for the verdict (D-027).
+    private(set) var reasoning: [String] = []
     /// Experimental AI field notes, sentence by sentence as they pass the checks.
     private(set) var fieldNotes: [String] = []
     private(set) var fieldNotesState: FieldNotesState = .off
@@ -134,6 +136,7 @@ final class ScanSession {
         decide()
         gaugeTarget = finalGauge
         if let evidence { queue += Array(Telemetry.measurementLines(for: evidence).shuffled().prefix(4)) }
+        if verdict?.wildcard != nil { queue.append("⚠ INEXPLICABLE READING DETECTED") }
         await tick(minimum: .seconds(3), until: { true })
         gauge = finalGauge
         phase = .revealed
@@ -216,6 +219,7 @@ final class ScanSession {
         if let run = modelRun, run.observations != nil {
             queue.append(String(format: "OBSERVER RESPONSE TIME: %.1f S", run.seconds))
         }
+        if verdict?.wildcard != nil { queue.append("⚠ INEXPLICABLE READING DETECTED") }
         queue.append("CROSS-REFERENCING CRYPTID DATABASE…")
     }
 
@@ -273,6 +277,7 @@ final class ScanSession {
         self.verdict = verdict
         subspecies = Subspecies.name(for: verdict.monster, seed: verdict.seed)
         exhibits = isInvisibleVerdict ? [] : Exhibits.lines(for: verdict.monster, observations: evidence.observations, seed: verdict.seed)
+        reasoning = isInvisibleVerdict ? [] : Reasoning.chain(for: verdict, evidence: evidence)
         dossier = DossierLibrary.bundled.write(DossierInput(verdict: verdict, observations: evidence.observations))
     }
 

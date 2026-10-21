@@ -4,6 +4,27 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — More variety, and the Bureau explains itself
+
+**Changed**
+
+- Verdicts are more random: diminishing returns on stacked clues, a bigger random nudge, and a 35% "wild card" monster ([D-027](DECISIONS.md#d-027)).
+- New "THE BUREAU'S REASONING" section on the reveal: five numbered steps of absurd, kind logic that end in the verdict, appearing one by one with a blip.
+- "⚠ INEXPLICABLE READING DETECTED" scan line when the wild card wins (also on Second Opinion).
+- Clue wording picks "a" or "an".
+
+**Measured**
+
+- 76 MonsterCore tests pass. New: a Bill-like profile (navy shirt) stays at or under 45% robot with at least six verdicts showing; 600 reasoning chains are kind, end in the verdict and fill every blank; a/an cases.
+- Bill-like profile, 1000 seeds: robot 62% → 36%, human 33% → 25%; alien 12%, zombie 10%, the rest 2–4%.
+- Simulator: blue-shirt photo → wild-card ZOMBIE; the steps appear one by one and nothing jumps. Installed on the iPhone 14 Pro (it was locked, so not launched).
+
+**Next**
+
+- Bill: a few rescans in the same shirt, to see if the mix and the reasoning feel right.
+
+---
+
 ## 2026-10-21 — Certificate can be saved to Photos
 
 **Changed**

@@ -83,6 +83,7 @@ Exit check: 10 consecutive scans, no crash, under 12 s each.
 - ✅ 10-scan soak on the iPhone: no crash, worst shutter-to-reveal 9.1 s, peak 953 MB; scans 9–10 switched to Classic as the phone got hot
 - ⏸ Bill: real scans with the full fun pack
 - ✅ Save-to-Photos (add-only) permission approved and added ([D-026](DECISIONS.md#d-026))
+- ✅ More random verdicts (wild card, evidence ceiling) and the Bureau's step-by-step reasoning on the reveal ([D-027](DECISIONS.md#d-027)); ⏸ Bill tries rescans in the same shirt
 
 ## M4 — Polish ⬜
 
