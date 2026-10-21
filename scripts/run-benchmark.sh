@@ -5,8 +5,10 @@
 #   2. launches the app with -MSRunBenchmark <set>,
 #   3. copies the summary and CSV back into Benchmarks/private/ (git-ignored:
 #      the readings describe real people).
-# Usage: scripts/run-benchmark.sh [set-name]   (DEVICE=<udid> picks a phone, PHOTOS=<dir> another folder)
+# Usage: scripts/run-benchmark.sh [set-name]   (DEVICE=<udid> picks a phone, PHOTOS=<dir> another folder,
+#        CHECK=-MSRunNotesCheck or CHECK=-MSRunSoak for the M3 checks instead of the benchmark)
 set -eu
+FLAG="${CHECK:--MSRunBenchmark}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUNDLE="com.williammcintyre.MonsterScanner"
 SET="${1:-run-$(date +%Y%m%d-%H%M%S)}"
@@ -27,7 +29,9 @@ for d in json.load(open(sys.argv[1]))["result"]["devices"]:
   rm -f "$JSON"
 fi
 [ -n "$DEVICE" ] || { echo "No connected, unlocked iPhone found." >&2; exit 1; }
-[ -f "$SRC/labels.csv" ] || { echo "Missing $SRC/labels.csv" >&2; exit 1; }
+if [ "$FLAG" = "-MSRunBenchmark" ]; then
+  [ -f "$SRC/labels.csv" ] || { echo "Missing $SRC/labels.csv" >&2; exit 1; }
+fi
 
 copy_to() {
   xcrun devicectl device copy to --device "$DEVICE" --domain-type appDataContainer \
@@ -39,10 +43,10 @@ for photo in "$SRC"/*; do
     *.jpg|*.jpeg|*.png|*.heic) copy_to "$photo" "Documents/Benchmarks/$SET/photos/$(basename "$photo")"; COUNT=$((COUNT + 1)) ;;
   esac
 done
-copy_to "$SRC/labels.csv" "Documents/Benchmarks/$SET/labels.csv"
+[ -f "$SRC/labels.csv" ] && copy_to "$SRC/labels.csv" "Documents/Benchmarks/$SET/labels.csv"
 echo "Copied $COUNT photos to set '$SET'. Launching benchmark…"
 
-if ! LAUNCH="$(xcrun devicectl device process launch --device "$DEVICE" --terminate-existing "$BUNDLE" -MSRunBenchmark "$SET" 2>&1)"; then
+if ! LAUNCH="$(xcrun devicectl device process launch --device "$DEVICE" --terminate-existing "$BUNDLE" "$FLAG" "$SET" 2>&1)"; then
   if echo "$LAUNCH" | grep -q "Locked"; then
     echo "The iPhone is locked. Unlock it (keep it unlocked for about a minute) and run this again." >&2
   else
@@ -50,7 +54,7 @@ if ! LAUNCH="$(xcrun devicectl device process launch --device "$DEVICE" --termin
   fi
   exit 1
 fi
-for _ in $(seq 1 60); do
+for _ in $(seq 1 120); do
   if xcrun devicectl device info files --device "$DEVICE" --domain-type appDataContainer --domain-identifier "$BUNDLE" \
        --subdirectory "Documents/Benchmarks/$SET" 2>/dev/null | grep -q "summary-latest.txt"; then
     break

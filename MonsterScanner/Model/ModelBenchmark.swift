@@ -101,7 +101,7 @@ nonisolated enum ModelBenchmark {
                   let photo = try? PhotoPreparer.prepare(data: data, source: .library) else { continue }
             let faces = FaceAnalyzer.detectFaces(in: photo.displayImage)
             let crop = faces.first.flatMap { ScanSession.subjectCrop(photo.displayImage, face: $0.box) } ?? photo.displayImage
-            let run = await model.observeDetailed(image: crop, timeout: LlamaCppObservationModel.callTimeout)
+            let run = await model.observeDetailed(image: crop, timeout: LlamaCppObservationModel.callTimeout, chaos: false)
             let classic = ClassicScanner.measure(
                 photo: photo, faces: faces, scene: SceneClassifier.classify(photo.displayImage), batteryLevel: nil
             ).observations

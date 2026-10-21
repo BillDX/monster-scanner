@@ -36,6 +36,17 @@ final class ScanSession {
     private(set) var isInvisibleVerdict = false
     private(set) var observationSource: ObservationSource = .classic
     private(set) var modelRun: ObservationRun?
+    /// Chaos Mode: the AI picked this verdict (spec 4.2b).
+    let isChaos: Bool
+    /// "Brunch Bat"
+    private(set) var subspecies: String?
+    /// Code-written jokes about what was spotted.
+    private(set) var exhibits: [String] = []
+    /// Experimental AI field notes, sentence by sentence as they pass the checks.
+    private(set) var fieldNotes: [String] = []
+    private(set) var fieldNotesState: FieldNotesState = .off
+
+    enum FieldNotesState: Equatable { case off, writing, done, failed }
 
     @ObservationIgnored private var input: ClassicScanner.Input?
     @ObservationIgnored private let observer: (any ObservationModel)?
@@ -45,11 +56,13 @@ final class ScanSession {
     @ObservationIgnored private var analysisFinished = false
     @ObservationIgnored private var modelSettled = true
     @ObservationIgnored private var modelTask: Task<Void, Never>?
+    @ObservationIgnored private var notesTask: Task<Void, Never>?
 
-    init(input: ClassicScanner.Input, observer: (any ObservationModel)?, tooHot: Bool) {
+    init(input: ClassicScanner.Input, observer: (any ObservationModel)?, tooHot: Bool, chaos: Bool = false) {
         self.input = input
         self.observer = observer
         self.tooHot = tooHot
+        isChaos = chaos && observer != nil
     }
 
     var observations: SubjectObservations { evidence?.observations ?? .unknown }
@@ -82,6 +95,7 @@ final class ScanSession {
         lines = []
         gauge = 0
         queue = Array(Telemetry.warmUp.prefix(3))
+        if isChaos { queue.insert("CHAOS MODE: THE AI IS IN CHARGE", at: 0) }
         if tooHot { queue.append("SCANNER OVERHEATING — SWITCHING TO BACKUP CRYSTALS") }
         guard let input else { phase = .failed; return }
 
@@ -110,7 +124,9 @@ final class ScanSession {
         calibration += 1
         lines = []
         gauge = 10
-        queue = ["RECALIBRATING SCANNER…", "CALIBRATION #\(calibration + 1) LOADED", "RE-READING EVIDENCE…"]
+        cancelFieldNotes()
+        queue = ["RECALIBRATING SCANNER…", "CALIBRATION #\(calibration + 1) LOADED",
+                 "BRIBING THE RADAR HAMSTER…", "RE-READING EVIDENCE…"]
         decide()
         gaugeTarget = finalGauge
         if let evidence { queue += Array(Telemetry.measurementLines(for: evidence).shuffled().prefix(4)) }
@@ -147,12 +163,17 @@ final class ScanSession {
         }
 
         queue += Telemetry.measurementLines(for: result.evidence, moonName: result.moonName)
+        // Sprinkle in a few jokes between the real readings.
+        for (offset, joke) in Jokes.flavour(count: 3, seed: result.seed(calibration: 0)).enumerated() {
+            queue.insert(joke, at: min(queue.count, 4 + offset * 4))
+        }
 
         if let observer, !tooHot, let crop = Self.subjectCrop(result.photo.displayImage, face: subject.box) {
             modelSettled = false
             queue.insert("AI OBSERVER ENGAGED: \(observer.displayName)…", at: min(2, queue.count))
+            let chaos = isChaos
             modelTask = Task { [weak self] in
-                let run = await observer.observeDetailed(image: crop, timeout: 20)
+                let run = await observer.observeDetailed(image: crop, timeout: 20, chaos: chaos)
                 self?.receiveModel(run)
             }
         } else {
@@ -227,11 +248,57 @@ final class ScanSession {
         guard let analysis else { return }
         let seed = analysis.seed(calibration: calibration)
         let evidence = self.evidence ?? analysis.evidence
-        let verdict = isInvisibleVerdict
-            ? VerdictEngine.invisibleSubject(seed: seed)
-            : VerdictEngine.decide(evidence, seed: seed)
+        let verdict: Verdict
+        if isInvisibleVerdict {
+            verdict = VerdictEngine.invisibleSubject(seed: seed)
+        } else if isChaos, let scores = modelRun?.chaosScores {
+            verdict = VerdictEngine.chaos(evidence, scores: scores, seed: seed)
+        } else {
+            verdict = VerdictEngine.decide(evidence, seed: seed)
+        }
         self.verdict = verdict
+        subspecies = Subspecies.name(for: verdict.monster, seed: verdict.seed)
+        exhibits = isInvisibleVerdict ? [] : Exhibits.lines(for: verdict.monster, observations: evidence.observations, seed: verdict.seed)
         dossier = DossierLibrary.bundled.write(DossierInput(verdict: verdict, observations: evidence.observations))
+    }
+
+    // MARK: Experimental AI field notes (M3, D-022)
+
+    /// Streams Agent K-9's field notes; every sentence must pass the filter
+    /// (strict kindness, no other monster, no echoed instructions) to appear.
+    func startFieldNotes() {
+        guard fieldNotesState == .off || fieldNotesState == .failed, let observer, let verdict,
+              observationSource != .classic, !ModelService.isTooHot, !isInvisibleVerdict else { return }
+        let input = DossierInput(verdict: verdict, observations: observations)
+        fieldNotes = []
+        fieldNotesState = .writing
+        notesTask = Task { [weak self] in
+            var filter = DossierStreamFilter(verdict: verdict.monster)
+            do {
+                for try await piece in observer.writeDossier(input) {
+                    let released = filter.feed(piece)
+                    guard let self, !Task.isCancelled else { return }
+                    self.fieldNotes += released
+                    if filter.isFull { break }
+                }
+                let tail = filter.finish()
+                self?.fieldNotes += tail
+                self?.fieldNotesState = (self?.fieldNotes.isEmpty ?? true) ? .failed : .done
+                if !filter.rejectedSentences.isEmpty {
+                    DebugLog.shared.record("Field notes: dropped \(filter.rejectedSentences.count) sentence(s)")
+                }
+            } catch {
+                DebugLog.shared.record("Field notes failed: \(error)")
+                self?.fieldNotesState = .failed
+            }
+        }
+    }
+
+    func cancelFieldNotes() {
+        notesTask?.cancel()
+        notesTask = nil
+        fieldNotes = []
+        fieldNotesState = .off
     }
 
     // MARK: Helpers

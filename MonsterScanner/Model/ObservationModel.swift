@@ -11,7 +11,8 @@ nonisolated protocol ObservationModel: AnyObject, Sendable {
     func prewarm() async throws
     func observe(image: CGImage) async throws -> SubjectObservations
     /// Like `observe`, but never throws and reports timings and attempts.
-    func observeDetailed(image: CGImage, timeout: TimeInterval) async -> ObservationRun
+    /// With `chaos`, the model also scores every monster (spec 4.2b).
+    func observeDetailed(image: CGImage, timeout: TimeInterval, chaos: Bool) async -> ObservationRun
     func writeDossier(_ input: DossierInput) -> AsyncThrowingStream<String, Error>
     func unload()
 }
@@ -28,6 +29,8 @@ nonisolated struct ObservationRun: Sendable {
     var generatedTokens = 0
     var promptTokens = 0
     var error: String?
+    /// Chaos Mode only: the AI's 0-100 score per monster.
+    var chaosScores: [Monster: Int]?
 }
 
 nonisolated enum ObservationError: Error, Equatable {
@@ -37,7 +40,7 @@ nonisolated enum ObservationError: Error, Equatable {
 }
 
 nonisolated extension ObservationModel {
-    func observeDetailed(image: CGImage, timeout: TimeInterval) async -> ObservationRun {
+    func observeDetailed(image: CGImage, timeout: TimeInterval, chaos: Bool) async -> ObservationRun {
         var run = ObservationRun()
         let start = Date()
         do {

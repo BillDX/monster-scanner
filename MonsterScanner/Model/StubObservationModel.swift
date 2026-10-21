@@ -23,7 +23,16 @@ nonisolated final class StubObservationModel: ObservationModel {
     }
 
     func writeDossier(_ input: DossierInput) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { $0.finish(throwing: ObservationError.notAvailableYet) }
+        AsyncThrowingStream { continuation in
+            Task {
+                for piece in ["That top hat? ", "Clearly ", "hiding something ", "magnificent. ",
+                              "That coffee cup? ", "Proof of a very ", "dramatic night!"] {
+                    try? await Task.sleep(for: .milliseconds(250))
+                    continuation.yield(piece)
+                }
+                continuation.finish()
+            }
+        }
     }
 
     func unload() {}

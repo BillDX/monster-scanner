@@ -13,7 +13,16 @@ struct SettingsView: View {
             Form {
                 Section("Scanner") {
                     Toggle("Agent voice", isOn: $app.voiceEnabled)
+                    Toggle("Sound effects", isOn: $app.soundsEnabled)
                     Toggle("Haptics", isOn: $app.hapticsEnabled)
+                }
+                Section {
+                    Toggle("Chaos Mode", isOn: $app.chaosMode)
+                    Toggle("AI field notes (experimental)", isOn: $app.aiFieldNotes)
+                } header: {
+                    Text("Mischief")
+                } footer: {
+                    Text("Chaos Mode lets the AI pick the verdict instead of the Bureau's rules. AI field notes adds Agent K-9's own scribbles after the dossier; small AIs are not great comedians, so results vary. Both need the AI observer.")
                 }
                 ModelSettingsSection(models: app.models)
                 Section("The promise") {
@@ -91,6 +100,13 @@ struct DebugView: View {
 
     var body: some View {
         List {
+            Section("Verdict tally (Chaos experiment)") {
+                let monsters = Monster.allCases
+                ForEach(monsters, id: \.self) { monster in
+                    row(monster.rawValue, "code \(app.tally["code." + monster.rawValue] ?? 0) · chaos \(app.tally["chaos." + monster.rawValue] ?? 0)")
+                }
+                Button("Reset tally", role: .destructive) { app.resetTally() }
+            }
             Section("Memory and model") {
                 row("Footprint", MemoryProbe.megabytes(MemoryProbe.footprintBytes))
                 row("Available before limit", MemoryProbe.megabytes(MemoryProbe.availableBytes))

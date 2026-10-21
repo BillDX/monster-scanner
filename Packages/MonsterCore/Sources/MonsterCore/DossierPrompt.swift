@@ -205,7 +205,7 @@ public struct DossierStreamFilter: Sendable {
 
     /// The "true age: 412 years" joke may say "412-year-old"; that's the game's
     /// joke, not a remark about the person, so it's masked before the age check.
-    static func maskingTrueAge(_ text: String) -> String {
+    public static func maskingTrueAge(_ text: String) -> String {
         text.replacingOccurrences(of: #"\b\d{2,4}[- ]years?[- ]old\b"#, with: "ancient", options: .regularExpression)
     }
 

@@ -6,16 +6,15 @@ struct BootView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var visibleLines = 0
+    /// A different mix of silly checks each launch.
+    @State private var checks = Array(Jokes.bootChecks.shuffled().prefix(5))
 
     private var lines: [String] {
         [
             "BUREAU OF SECRET MONSTER AFFAIRS",
             "FIELD SCANNER BIOS v\(Self.version)",
             "",
-            "Calibrating ectoplasm sensors… OK",
-            "Polishing garlic detectors… OK",
-            "Aligning alien antenna array… OK",
-            "Charging silver-bullet capacitors… OK",
+        ] + checks + [
             "Consulting the moon… \(Int((MoonPhase.illumination(at: .now) * 100).rounded()))% FULL",
             "",
             app.models.bootLine,

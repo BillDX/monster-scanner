@@ -17,6 +17,7 @@ struct RevealView: View {
                         header
                         verdictCard(verdict)
                         dossierSection(dossier, verdict: verdict)
+                        if app.aiFieldNotes && session.fieldNotesState != .off { fieldNotesSection }
                         cluesSection(verdict)
                         readingsSection(verdict)
                         actions
@@ -34,6 +35,11 @@ struct RevealView: View {
         }
         .crtScreen()
         .task(id: session.calibration) { await reveal() }
+        .onShake {
+            // Shake for a second opinion.
+            guard revealed, !session.isInvisibleVerdict else { return }
+            app.secondOpinion()
+        }
         .onDisappear { app.narrator.stop() }
     }
 
@@ -44,13 +50,19 @@ struct RevealView: View {
         withAnimation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7)) { revealed = true }
         try? await Task.sleep(for: .milliseconds(600))
         if app.voiceEnabled, let text = session.narrationText { app.narrator.speak(text) }
+        if app.aiFieldNotes { session.startFieldNotes() }
     }
 
     // MARK: Sections
 
     private var header: some View {
         HStack {
-            Stamp()
+            if session.isChaos {
+                Stamp(text: "CHAOS MODE")
+                    .accessibilityLabel("Chaos Mode: the AI is in charge")
+            } else {
+                Stamp()
+            }
             Spacer()
             Button {
                 app.voiceEnabled.toggle()
@@ -78,6 +90,18 @@ struct RevealView: View {
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.5)
                 .crtGlow(verdict.monster == .human ? Theme.neon : Theme.alert, radius: 8)
+            if let subspecies = session.subspecies {
+                Text("SUBSPECIES: \(subspecies.uppercased())")
+                    .font(Theme.mono(.subheadline, weight: .bold))
+                    .foregroundStyle(Theme.neon)
+                    .multilineTextAlignment(.center)
+            }
+            if session.isChaos {
+                Text("THE AI IS IN CHARGE. THE BUREAU TAKES NO RESPONSIBILITY.")
+                    .font(Theme.mono(.caption2, weight: .bold))
+                    .foregroundStyle(Theme.alert)
+                    .multilineTextAlignment(.center)
+            }
             Text("CONFIDENCE \(verdict.confidenceText)")
                 .font(Theme.mono(.title3, weight: .bold))
                 .foregroundStyle(Theme.neon)
@@ -90,7 +114,7 @@ struct RevealView: View {
         .padding(.vertical, 20)
         .overlay(Rectangle().stroke(Theme.neon.opacity(0.7), lineWidth: 1.5))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Verdict: \(verdict.monster.verdictTitle). Confidence \(verdict.confidenceText).")
+        .accessibilityLabel("Verdict: \(verdict.monster.verdictTitle)\(session.subspecies.map { ", subspecies \($0)" } ?? ""). Confidence \(verdict.confidenceText).")
     }
 
     private func dossierSection(_ dossier: Dossier, verdict: Verdict) -> some View {
@@ -119,6 +143,32 @@ struct RevealView: View {
                 }
                 .font(Theme.mono(.callout))
             }
+            ForEach(Array(session.exhibits.enumerated()), id: \.offset) { index, exhibit in
+                HStack(alignment: .top, spacing: 10) {
+                    Text(["D.", "E.", "F."][min(index, 2)])
+                        .foregroundStyle(Theme.alert)
+                    Text(exhibit)
+                        .foregroundStyle(Theme.neon)
+                    Spacer(minLength: 0)
+                }
+                .font(Theme.mono(.callout))
+            }
+        }
+    }
+
+    private var fieldNotesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(title: "AGENT K-9'S FIELD NOTES (AI, EXPERIMENTAL)")
+            if session.fieldNotes.isEmpty {
+                Text(session.fieldNotesState == .writing ? "AGENT K-9 IS SCRIBBLING…" : "NOTHING FIT TO PRINT.")
+                    .font(Theme.mono(.caption))
+                    .foregroundStyle(Theme.dimNeon)
+            } else {
+                Text(session.fieldNotes.joined(separator: " "))
+                    .font(Theme.mono(.callout))
+                    .foregroundStyle(Theme.neon)
+                    .animation(.easeOut, value: session.fieldNotes.count)
+            }
         }
     }
 
@@ -133,7 +183,7 @@ struct RevealView: View {
             ("ACCESSORIES", o.wornAccessories.isEmpty ? "NONE DETECTED"
                 : Accessory.allCases.filter(o.wornAccessories.contains).map { $0.rawValue.uppercased() }.joined(separator: ", ")),
             ("SETTING", label(o.backgroundHint)),
-            ("FIELD NOTES", o.funDetails.isEmpty ? "NONE FILED" : o.funDetails.map { $0.uppercased() }.joined(separator: "\n")),
+            ("SPOTTED", o.funDetails.isEmpty ? "NOTHING UNUSUAL. SUSPICIOUS." : o.funDetails.map { $0.uppercased() }.joined(separator: "\n")),
             ("SCANNER MODE", session.modeLabel),
         ]
         return VStack(alignment: .leading, spacing: 8) {
@@ -157,9 +207,9 @@ struct RevealView: View {
     private var actions: some View {
         VStack(spacing: 12) {
             if !session.isInvisibleVerdict {
-                Button("Second Opinion") { app.secondOpinion() }
+                Button("Second Opinion (or shake)") { app.secondOpinion() }
                     .buttonStyle(NeonButtonStyle())
-                    .accessibilityHint("Re-runs the verdict with a different scanner calibration")
+                    .accessibilityHint("Re-runs the verdict with a different scanner calibration. You can also shake the phone.")
             }
             Button("Scan Again") { app.scanAgain() }
                 .buttonStyle(NeonButtonStyle(filled: true))

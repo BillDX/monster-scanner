@@ -14,6 +14,10 @@ final class AppModel {
         static let consent = "consent.v1"
         static let voice = "settings.voice"
         static let haptics = "settings.haptics"
+        static let sounds = "settings.sounds"
+        static let chaos = "settings.chaos"
+        static let fieldNotes = "settings.fieldNotes"
+        static let tally = "stats.verdictTally"
     }
 
     var screen: Screen = .boot
@@ -25,6 +29,13 @@ final class AppModel {
         }
     }
     var hapticsEnabled: Bool { didSet { defaults.set(hapticsEnabled, forKey: Keys.haptics) } }
+    var soundsEnabled: Bool { didSet { defaults.set(soundsEnabled, forKey: Keys.sounds) } }
+    /// Spec 4.2b: the AI picks the verdict. Off by default.
+    var chaosMode: Bool { didSet { defaults.set(chaosMode, forKey: Keys.chaos) } }
+    /// M3 experiment: Agent K-9's streamed AI field notes. Off by default (D-022).
+    var aiFieldNotes: Bool { didSet { defaults.set(aiFieldNotes, forKey: Keys.fieldNotes) } }
+    /// Verdict counts, "code.vampire" / "chaos.vampire", for the Chaos experiment.
+    private(set) var tally: [String: Int]
     /// A one-off message shown as an alert.
     var alertMessage: String?
 
@@ -41,6 +52,20 @@ final class AppModel {
         hasConsented = defaults.bool(forKey: Keys.consent)
         voiceEnabled = defaults.object(forKey: Keys.voice) as? Bool ?? true
         hapticsEnabled = defaults.object(forKey: Keys.haptics) as? Bool ?? true
+        soundsEnabled = defaults.object(forKey: Keys.sounds) as? Bool ?? true
+        chaosMode = defaults.bool(forKey: Keys.chaos)
+        aiFieldNotes = defaults.bool(forKey: Keys.fieldNotes)
+        tally = defaults.dictionary(forKey: Keys.tally) as? [String: Int] ?? [:]
+    }
+
+    func record(_ verdict: Monster, chaos: Bool) {
+        tally[(chaos ? "chaos." : "code.") + verdict.rawValue, default: 0] += 1
+        defaults.set(tally, forKey: Keys.tally)
+    }
+
+    func resetTally() {
+        tally = [:]
+        defaults.removeObject(forKey: Keys.tally)
     }
 
 
@@ -61,7 +86,10 @@ final class AppModel {
         let input = ClassicScanner.Input(
             data: data, source: source, batteryLevel: Self.batteryLevel(), now: .now
         )
-        let session = ScanSession(input: input, observer: models.observerForScan, tooHot: ModelService.isTooHot)
+        let session = ScanSession(
+            input: input, observer: models.observerForScan, tooHot: ModelService.isTooHot,
+            chaos: chaosMode && models.observerForScan != nil
+        )
         self.session = session
         screen = .scanning
         Task { await run(session, secondOpinion: false) }
@@ -101,6 +129,7 @@ final class AppModel {
         guard self.session === session, screen == .scanning else { return }
         switch session.phase {
         case .revealed:
+            if !secondOpinion, let verdict = session.verdict { record(verdict.monster, chaos: session.isChaos) }
             screen = .reveal
         case .noSubject:
             screen = .noSubject
@@ -120,6 +149,14 @@ final class AppModel {
     func applyDebugLaunchArguments() {
         let args = ProcessInfo.processInfo.arguments
         #if canImport(llama)
+        // -MSRunNotesCheck / -MSRunSoak [set]: the M3 checks (scripts/run-benchmark.sh --flag).
+        for flag in ["-MSRunNotesCheck", "-MSRunSoak"] {
+            guard let index = args.firstIndex(of: flag) else { continue }
+            let next = index + 1 < args.count ? args[index + 1] : nil
+            let set = next.flatMap { $0.hasPrefix("-") ? nil : $0 }
+            Task { await M3Checks.run(flag: flag, set: set, models: models) }
+            return
+        }
         // -MSRunBenchmark [set]: benchmark Documents/Benchmarks[/set] (scripts/run-benchmark.sh).
         if let flag = args.firstIndex(of: "-MSRunBenchmark") {
             let next = flag + 1 < args.count ? args[flag + 1] : nil

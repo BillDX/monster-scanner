@@ -60,7 +60,7 @@ final class ModelService {
     }
 
     /// Spec section 6: switch to Classic Mode when the phone is hot.
-    static var isTooHot: Bool {
+    nonisolated static var isTooHot: Bool {
         ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue
     }
 
