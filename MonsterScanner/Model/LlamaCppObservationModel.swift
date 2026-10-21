@@ -35,7 +35,6 @@ nonisolated final class LlamaCppObservationModel: ObservationModel {
     func observeDetailed(image: CGImage, timeout: TimeInterval = callTimeout) async -> ObservationRun {
         var run = ObservationRun()
         let start = Date()
-        defer { run.seconds = Date().timeIntervalSince(start) }
         guard let rgb = ImageBytes.rgb(from: image, maxPixels: 512) else {
             run.error = "image conversion failed"
             return run
@@ -58,13 +57,15 @@ nonisolated final class LlamaCppObservationModel: ObservationModel {
                 if case .success(let observations) = ObservationParser.parse(result.text) {
                     run.observations = observations
                     run.firstAttemptParsed = attempt == 0
-                    return run
+                    break
                 }
             }
-            run.error = "invalid JSON twice"
+            if run.observations == nil { run.error = "invalid JSON twice" }
         } catch {
             run.error = "\(error)"
         }
+        // Set here, not in a defer: a defer would run after the struct was copied out.
+        run.seconds = Date().timeIntervalSince(start)
         return run
     }
 

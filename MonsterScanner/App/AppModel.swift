@@ -121,22 +121,7 @@ final class AppModel {
         let args = ProcessInfo.processInfo.arguments
         #if canImport(llama)
         if args.contains("-MSRunBenchmark") {
-            Task {
-                await models.prepare()
-                let verify = models.lastVerifySeconds
-                models.unload(reason: "benchmark")
-                do {
-                    let report = try await ModelBenchmark.run(pack: models.pack) { _ in }
-                    let text = report.summary + String(format: "\nSHA-256 verify at launch: %.2f s", verify ?? -1)
-                    let url = ModelBenchmark.folder.appendingPathComponent("summary-latest.txt")
-                    try? text.write(to: url, atomically: true, encoding: .utf8)
-                    DebugLog.shared.record("Benchmark:\n" + text)
-                } catch {
-                    let url = ModelBenchmark.folder.appendingPathComponent("summary-latest.txt")
-                    try? "Benchmark failed: \(error)".write(to: url, atomically: true, encoding: .utf8)
-                }
-                await models.prepare()
-            }
+            Task { _ = await ModelBenchmark.runWithService(models) { _ in } }
             return
         }
         #endif

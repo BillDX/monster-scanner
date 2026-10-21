@@ -4,6 +4,23 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — M2: first benchmark on the iPhone 14 Pro
+
+**Measured (Debug build, 4 Memoji test photos)**
+
+- SHA-256 check of both files at launch 1.41 s; model load 0.73 s; peak footprint 958 MB.
+- AI observation 4.39–4.54 s per photo (about 1.4 s image encode + prompt, ~65 tokens at ~21 tok/s); whole pipeline 4.8 s. The scan animation runs 5.5 s, so shutter to reveal stays around 6 s (budget 12 s).
+- Valid JSON 4/4, all on the first try. Readings 100% right on the Memoji photos vs 67% for Classic Mode; not meaningful until real photos are used.
+- The first run's numbers were thrown away: a timing bug (set in a `defer`, after the result was copied) gave 0 s per scan, and the benchmark loaded a second model copy while the boot screen was still hashing the first, giving a bogus 15.7 s load. Both fixed; the benchmark now reuses the launch-time load.
+
+**Next**
+
+- Bill: 10 hand-labelled photos → accuracy for Qwen3-VL-2B and Classic.
+- Then Qwen3.5-2B on the same photos (needs approval for Unsloth's community GGUF, or the MLX route).
+- Try the in-app model download on the phone.
+
+---
+
 ## 2026-10-21 — M2: Qwen3-VL-2B running through llama.cpp
 
 **Changed**

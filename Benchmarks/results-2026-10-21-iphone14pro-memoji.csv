@@ -1,0 +1,5 @@
+model,runtime,file,load_s,seconds,pipeline_s,prefill_s,gen_tokens,attempts,first_try_json,valid_json,hair,eyes,shirt,age,expression,accessories,background,model_matches,classic_matches,fields,footprint_mb,peak_mb,error
+"QWEN3-VL-2B",llama.cpp b11799,"subject-black-2341.jpg",0.73,4.54,5.24,1.37,65,1,true,true,blonde,brown,"black",unknown,smiling,"","pink, background",6,4,6,896,958,""
+"QWEN3-VL-2B",llama.cpp b11799,"subject-blue-1400.jpg",0.73,4.48,4.64,1.42,67,1,true,true,blonde,brown,"blue",unknown,smiling,"","pink, blue, emoji",6,4,6,895,958,""
+"QWEN3-VL-2B",llama.cpp b11799,"subject-green-2000.jpg",0.73,4.49,4.62,1.42,67,1,true,true,blonde,brown,"green",unknown,smiling,"","pink, green, emoji",6,4,6,899,958,""
+"QWEN3-VL-2B",llama.cpp b11799,"subject-red-0630.jpg",0.73,4.39,4.53,1.43,63,1,true,true,blonde,brown,"red",unknown,smiling,"","pink, red, emoji",6,4,6,909,958,""

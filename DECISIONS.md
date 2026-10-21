@@ -254,14 +254,18 @@ Camera and Metal model performance can only be tested on the phone. In the Simul
 
 ---
 
-## M2 benchmark table (to fill in)
+## M2 benchmark table
+
+**Status 2026-10-21:** speed, memory and JSON validity are measured on the iPhone 14 Pro with 4 synthetic test photos (Apple's Memoji sample on coloured shirts). Accuracy on real people needs Bill's 10 hand-labelled photos; Qwen3.5-2B is compared on those same photos.
+
+**Memory finding:** peak footprint 958 MB is well under the 2.5 GB budget, so the `com.apple.developer.kernel.increased-memory-limit` entitlement isn't needed.
 
 10 hand-labelled photos. Accuracy is the share of attributes (hair, eyes, shirt, age band, expression, accessories) matching Bill's labels. Raw rows go to `Benchmarks/results.csv`.
 
 | Option | Runtime + release | Model files (SHA-256 pinned) | Download | Load time | Peak memory | s / scan | Valid JSON (of 10) | Attribute accuracy | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| Qwen3-VL-2B Q4_K_M + mmproj Q8_0 | llama.cpp b11799 | | | | | | | | |
+| Qwen3-VL-2B Q4_K_M + mmproj Q8_0 | llama.cpp b11799 | yes ([D-015](#d-015)) | 1.55 GB | **0.73 s** (+1.41 s SHA-256 check) | **958 MB** | **4.47 s** model, 4.76 s whole pipeline | **4/4** (all first try) | 100% on Memoji test photos; **real photos pending** | iPhone 14 Pro, Debug build, 2026-10-21. ~21 tok/s generation, 1.4 s image + prompt. [CSV](Benchmarks/results-2026-10-21-iphone14pro-memoji.csv) |
 | Qwen3.5-2B Q4 | llama.cpp or MLX | | | | | | | | |
 | Qwen3-VL-2B 4-bit | mlx-swift-lm (only if needed) | | | | | | | | |
 | Qwen3.5-0.8B (only if 2B misses latency) | | | | | | | | | |
-| Classic Mode | Vision + pixel sampling | none | 0 | 0 | | | n/a | | baseline |
+| Classic Mode | Vision + pixel sampling | none | 0 | 0 | — | under 0.5 s | n/a | 67% on the same Memoji photos | baseline (no eye colour or age by design) |

@@ -4,7 +4,7 @@ Milestones, tasks and status. Keep this in step with [PROGRESS.md](PROGRESS.md):
 
 Status key: ✅ done · 🟡 in progress · ⏸ waiting on Bill · ⬜ not started
 
-**Current milestone: M2 — model running in the app; on-device benchmark next.**
+**Current milestone: M2 — benchmarked on the iPhone; waiting for Bill's 10 labelled photos.**
 
 ---
 
@@ -63,9 +63,10 @@ Exit check: the DECISIONS.md benchmark table is filled in.
 - 🟡 Model downloader: official HF org over HTTPS, Wi-Fi by default, size shown, pinned SHA-256 checked before load — built; in-app download not yet tried on the phone
 - ✅ Observation JSON call (grammar-constrained, [D-017](DECISIONS.md#d-017)), retry once, parser tested against 20 malformed outputs
 - ✅ 20 s timeout plus scan deadline ([D-018](DECISIONS.md#d-018)), thermal-state fallback, memory-warning unload, background unload, boot prewarm
-- 🟡 Benchmark harness: built (Debug screen and `-MSRunBenchmark` flag); waiting for the run on the phone and Bill's 10 labelled photos
+- ✅ Benchmark harness (Debug screen and `-MSRunBenchmark` flag); first run on the iPhone 14 Pro done
+- ⏸ Bill provides 10 hand-labelled photos for the accuracy column
 - ⬜ Evaluate Qwen3-VL-2B (llama.cpp), then Qwen3.5-2B; MLX fallback if the primary misses budget
-- ⬜ Investigate `increased-memory-limit` entitlement (do not depend on it)
+- ✅ Investigate `increased-memory-limit` entitlement: not needed (peak 958 MB)
 
 ## M3 — AI dossier ⬜
 

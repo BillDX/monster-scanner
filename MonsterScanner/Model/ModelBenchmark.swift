@@ -20,6 +20,8 @@ nonisolated enum ModelBenchmark {
     struct Row: Sendable {
         var file: String
         var run: ObservationRun
+        /// Photo prep + Vision + classic measurements + model, end to end.
+        var pipelineSeconds: Double
         var classic: SubjectObservations?
         var modelMatches: Int?
         var classicMatches: Int?
@@ -30,12 +32,14 @@ nonisolated enum ModelBenchmark {
     struct Report: Sendable {
         var modelName: String
         var loadSeconds: Double
+        var verifySeconds: Double?
         var peakFootprintMB: Double
         var rows: [Row]
         var csvPath: String
 
         var summary: String {
             let times = rows.map(\.run.seconds)
+            let pipeline = rows.map(\.pipelineSeconds)
             let valid = rows.filter { $0.run.observations != nil }.count
             let firstTry = rows.filter(\.run.firstAttemptParsed).count
             let labelled = rows.filter { $0.modelMatches != nil }
@@ -45,8 +49,10 @@ nonisolated enum ModelBenchmark {
                 : Double(labelled.reduce(0) { $0 + ($1.classicMatches ?? 0) }) / Double(labelled.count * 6)
             return [
                 "\(modelName) on \(rows.count) photos",
-                String(format: "Load: %.2f s · Peak footprint: %.0f MB", loadSeconds, peakFootprintMB),
-                String(format: "Seconds/scan: mean %.2f, max %.2f", times.reduce(0, +) / Double(max(1, times.count)), times.max() ?? 0),
+                String(format: "SHA-256 check: %.2f s · Load: %.2f s · Peak footprint: %.0f MB", verifySeconds ?? -1, loadSeconds, peakFootprintMB),
+                String(format: "Model s/scan: mean %.2f, max %.2f (first %.2f)", times.reduce(0, +) / Double(max(1, times.count)), times.max() ?? 0, times.first ?? 0),
+                String(format: "Whole pipeline s/photo: mean %.2f, max %.2f", pipeline.reduce(0, +) / Double(max(1, pipeline.count)), pipeline.max() ?? 0),
+                "Per photo (model s): " + times.map { String(format: "%.2f", $0) }.joined(separator: ", "),
                 "Valid JSON: \(valid)/\(rows.count) (first try \(firstTry)/\(rows.count))",
                 modelAccuracy.map { String(format: "Attribute accuracy (model): %.0f%% over %d labelled photos", $0 * 100, labelled.count) }
                     ?? "Attribute accuracy: no labels.csv",
@@ -61,8 +67,13 @@ nonisolated enum ModelBenchmark {
             .appendingPathComponent("Benchmarks", isDirectory: true)
     }
 
+    /// Benchmarks an already-loaded model (load and verify times come from
+    /// `ModelService`, measured at app launch).
     @concurrent
-    static func run(pack: ModelPack, progress: @escaping @Sendable (String) -> Void) async throws -> Report {
+    static func run(
+        model: LlamaCppObservationModel, pack: ModelPack, loadSeconds: Double, verifySeconds: Double?,
+        progress: @escaping @Sendable (String) -> Void
+    ) async throws -> Report {
         let photosFolder = folder.appendingPathComponent("photos", isDirectory: true)
         let files = ((try? FileManager.default.contentsOfDirectory(at: photosFolder, includingPropertiesForKeys: nil)) ?? [])
             .filter { ["jpg", "jpeg", "png", "heic"].contains($0.pathExtension.lowercased()) }
@@ -73,17 +84,10 @@ nonisolated enum ModelBenchmark {
         peak.start()
         defer { peak.stop() }
 
-        progress("Loading model…")
-        let model = LlamaCppObservationModel(
-            displayName: pack.displayName,
-            modelPath: try ModelStore.url(for: pack.model, in: pack).path,
-            projectorPath: try ModelStore.url(for: pack.projector, in: pack).path
-        )
-        let loadSeconds = try await model.load()
-
         var rows: [Row] = []
         for (index, url) in files.enumerated() {
             progress("Photo \(index + 1)/\(files.count): \(url.lastPathComponent)")
+            let pipelineStart = Date()
             guard let data = try? Data(contentsOf: url),
                   let photo = try? PhotoPreparer.prepare(data: data, source: .library) else { continue }
             let faces = FaceAnalyzer.detectFaces(in: photo.displayImage)
@@ -93,19 +97,17 @@ nonisolated enum ModelBenchmark {
                 photo: photo, faces: faces, scene: SceneClassifier.classify(photo.displayImage), batteryLevel: nil
             ).observations
 
-            var row = Row(file: url.lastPathComponent, run: run, classic: classic,
-                          footprintMB: Double(MemoryProbe.footprintBytes) / 1_048_576)
+            var row = Row(file: url.lastPathComponent, run: run, pipelineSeconds: Date().timeIntervalSince(pipelineStart),
+                          classic: classic, footprintMB: Double(MemoryProbe.footprintBytes) / 1_048_576)
             if let label = labels[url.lastPathComponent] {
                 row.modelMatches = run.observations.map { matches($0, label) } ?? 0
                 row.classicMatches = matches(classic, label)
             }
             rows.append(row)
         }
-        model.unload()
-        try? await Task.sleep(for: .milliseconds(300))
-
         let csv = try writeCSV(rows: rows, model: pack.displayName, loadSeconds: loadSeconds, peak: peak.peakMB)
-        return Report(modelName: pack.displayName, loadSeconds: loadSeconds, peakFootprintMB: peak.peakMB, rows: rows, csvPath: csv)
+        return Report(modelName: pack.displayName, loadSeconds: loadSeconds, verifySeconds: verifySeconds,
+                      peakFootprintMB: peak.peakMB, rows: rows, csvPath: csv)
     }
 
     // MARK: Scoring
@@ -134,12 +136,13 @@ nonisolated enum ModelBenchmark {
 
     static func writeCSV(rows: [Row], model: String, loadSeconds: Double, peak: Double) throws -> String {
         func q(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\"", with: "'") + "\"" }
-        var lines = ["model,runtime,file,load_s,seconds,prefill_s,gen_tokens,attempts,first_try_json,valid_json,hair,eyes,shirt,age,expression,accessories,background,model_matches,classic_matches,fields,footprint_mb,peak_mb,error"]
+        var lines = ["model,runtime,file,load_s,seconds,pipeline_s,prefill_s,gen_tokens,attempts,first_try_json,valid_json,hair,eyes,shirt,age,expression,accessories,background,model_matches,classic_matches,fields,footprint_mb,peak_mb,error"]
         for r in rows {
             let o = r.run.observations
             lines.append([
                 q(model), "llama.cpp b11799", q(r.file), String(format: "%.2f", loadSeconds),
-                String(format: "%.2f", r.run.seconds), String(format: "%.2f", r.run.prefillSeconds),
+                String(format: "%.2f", r.run.seconds), String(format: "%.2f", r.pipelineSeconds),
+                String(format: "%.2f", r.run.prefillSeconds),
                 "\(r.run.generatedTokens)", "\(r.run.attempts)", "\(r.run.firstAttemptParsed)", "\(o != nil)",
                 o?.hairColor.rawValue ?? "", o?.eyeColor.rawValue ?? "", q(o?.shirtColor ?? ""), o?.ageBand.rawValue ?? "",
                 o?.expression.rawValue ?? "", q(o?.accessories.map(\.rawValue).joined(separator: ";") ?? ""),
@@ -152,6 +155,37 @@ nonisolated enum ModelBenchmark {
         let url = folder.appendingPathComponent("results-\(stamp).csv")
         try lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
         return url.lastPathComponent
+    }
+}
+
+extension ModelBenchmark {
+    /// Waits for the app's own launch-time verify + load, then benchmarks
+    /// that loaded model. Writes summary-latest.txt next to the CSV.
+    @MainActor
+    static func runWithService(_ models: ModelService, progress: @escaping @Sendable (String) -> Void) async -> String {
+        progress("Waiting for the model to verify and load…")
+        await models.prepare()
+        while models.status == .verifying || models.status == .loading {
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+        let text: String
+        if let model = models.observer as? LlamaCppObservationModel, let load = models.lastLoadSeconds {
+            do {
+                let report = try await run(
+                    model: model, pack: models.pack, loadSeconds: load, verifySeconds: models.lastVerifySeconds,
+                    progress: progress
+                )
+                text = report.summary
+            } catch {
+                text = "Benchmark failed: \(error)"
+            }
+        } else {
+            text = "Benchmark needs the model ready; status: \(models.bootLine)"
+        }
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? text.write(to: folder.appendingPathComponent("summary-latest.txt"), atomically: true, encoding: .utf8)
+        DebugLog.shared.record("Benchmark:\n" + text)
+        return text
     }
 }
 
@@ -201,17 +235,9 @@ struct BenchmarkView: View {
     private func run() async {
         running = true
         defer { running = false }
-        app.models.unload(reason: "benchmark")
-        do {
-            let report = try await ModelBenchmark.run(pack: app.models.pack) { message in
-                Task { @MainActor in status = message }
-            }
-            status = report.summary
-            DebugLog.shared.record("Benchmark:\n" + report.summary)
-        } catch {
-            status = "Benchmark failed: \(error)"
+        status = await ModelBenchmark.runWithService(app.models) { message in
+            Task { @MainActor in status = message }
         }
-        await app.models.prepare()
     }
 }
 #endif
