@@ -1,0 +1,23 @@
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.xcresult
+
+# SwiftPM
+.build/
+.swiftpm/
+Packages/*/.build/
+Packages/*/.swiftpm/
+
+# macOS
+.DS_Store
+
+# Model files are downloaded at runtime, never committed
+*.gguf
+*.safetensors
+Models/
+
+# Benchmark photos are of real people: never commit them
+Benchmarks/photos/

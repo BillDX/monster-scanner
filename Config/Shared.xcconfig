@@ -1,0 +1,13 @@
+// Shared build settings for the MonsterScanner app target.
+// Change signing here, not in the Xcode UI, so the project file stays clean.
+
+// Paid individual Apple Developer team (from Xcode > Settings > Accounts).
+DEVELOPMENT_TEAM = WUZN2W5PYW
+CODE_SIGN_STYLE = Automatic
+
+// Bundle ID = <prefix>.MonsterScanner. Must be unique to your team.
+BUNDLE_ID_PREFIX = com.williammcintyre
+PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_PREFIX).MonsterScanner
+
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
