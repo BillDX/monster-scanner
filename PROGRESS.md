@@ -4,6 +4,19 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — M1 closed, M2 started
+
+**Changed**
+
+- First install on the iPhone 14 Pro from this Mac: paired the phone, enabled Developer Mode, registered the device and created the development profile for `com.williammcintyre.MonsterScanner` (automatic signing, team WUZN2W5PYW).
+- M1 signed off: Bill ran the README device checklist on the iPhone in airplane mode and everything passed.
+
+**Next**
+
+- M2 pre-flight: pin the llama.cpp release and the Qwen model files (sizes, SHA-256), check the CVE fix and Qwen3.5 support, then Bill tries the same GGUF in PocketPal before any model code.
+
+---
+
 ## 2026-10-21 — M1 part 2: the app (Classic Mode game loop)
 
 **Changed**
