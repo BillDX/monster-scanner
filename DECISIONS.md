@@ -266,7 +266,7 @@ Strict mode applies only to AI text. Our own lines may still say the Bureau is "
 
 - **Sampler fix:** the check-then-resample sampler first copied all ~152k scores into Swift for every token. In a Debug build that loop cost about 25% of generation speed on the phone. The free sample now runs in llama.cpp's C sampler; only that single token is checked against the grammar, and the Swift full-vocabulary pass runs only on a rare rejection.
 - **Compact JSON spacing** (tried again with the new prompt): no token saving, and blander, padded details. Natural spacing stays.
-- **Heat matters most.** Back-to-back runs on the charger took the phone to thermal "serious", where generation runs at about half speed. At "serious" the app already uses Classic. At "fair" (state 1), detail-rich photos may miss the deadline and fall back silently. Options: a lite prompt without the playful fields while the phone is warm, or a deadline closer to 11.5 s. Not decided.
+- **Heat matters most.** Back-to-back runs on the charger took the phone to thermal "serious", where generation runs at about half speed. At "serious" the app already uses Classic. At "fair" (state 1), detail-rich photos may miss the deadline and fall back silently. Options were a lite prompt without the playful fields while the phone is warm, or a deadline closer to 11.5 s. **Decision (Bill, 2026-10-21): leave it as is; falling back to Classic when warm is fine.**
 - Valid JSON 5/5 on every run, all first try. Peak memory 978 MB.
 
 ---

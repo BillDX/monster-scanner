@@ -21,7 +21,7 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 **Next**
 
 - Bill: real scans to judge the tone of the new details.
-- Decide what to do when the phone is warm ("fair"): lite prompt without the playful fields, or a later deadline.
+- Decided by Bill: when the phone is warm, falling back to Classic is fine; no lite prompt for now.
 
 ---
 
