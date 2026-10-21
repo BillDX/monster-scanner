@@ -85,9 +85,14 @@ PLAN.md · PROGRESS.md · DECISIONS.md
 
 | Dependency | Version | Licence | Used for |
 |---|---|---|---|
-| *(none yet)* | | | Apple system frameworks only |
+| [llama.cpp](https://github.com/ggml-org/llama.cpp) prebuilt `llama.xcframework` | `b11799` (`llama-b11799-xcframework.zip`, SHA-256 `9fa07281…9809`) | MIT | On-device inference on Metal, with `mtmd` for image input. Linked into iPhone builds only ([D-016](DECISIONS.md#d-016)) |
+| [Qwen3-VL-2B-Instruct GGUF](https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF), `Qwen3VL-2B-Instruct-Q4_K_M.gguf` | repo commit `52d6c8f`, 1,107 MB, SHA-256 `089d75c5…c2ae` | Apache 2.0 | Language model for the AI observer |
+| Same repo, `mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf` | repo commit `52d6c8f`, 445 MB, SHA-256 `f9a68fab…9c82` | Apache 2.0 | Vision projector (turns the photo into model input) |
 
-Planned for M2, each pinned and added only after approval: llama.cpp prebuilt `llama.xcframework` (MIT) and Qwen model weights (Apache 2.0), downloaded once at runtime.
+- Nothing else is third-party: no Swift packages besides the local `MonsterCore`, and Apple system frameworks for everything else.
+- llama.cpp is fetched at build time by `scripts/fetch-llama.sh` into `Vendor/` (not committed).
+- The model files aren't in the app bundle. They are downloaded once in the app from the official Qwen org (or by `scripts/fetch-models.sh` for development) and checked against the pinned SHA-256 before loading.
+- Full hashes and the pre-flight checks are in [D-015](DECISIONS.md#d-015); the app's pins are in `MonsterScanner/Model/ModelCatalog.swift`.
 
 ## Privacy
 
