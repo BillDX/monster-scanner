@@ -80,6 +80,17 @@ public struct SubjectObservations: Codable, Sendable, Equatable {
     /// Up to four words, e.g. "city park at night".
     public var backgroundHint: String
 
+    // Fun, kind free text from the AI observer (DECISIONS.md D-021). Never
+    // scored by the verdict engine; shown in the reveal and narrated.
+    // Each field passed the kindness check, or is nil / empty.
+
+    /// A kind, funny take on the expression: "grinning like they found free cake".
+    public var expressionRead: String?
+    /// Up to 3 short things seen: "red bobble hat", "thumbs up".
+    public var funDetails: [String]
+    /// One silly, make-believe line: "radiates the calm of a wizard on holiday".
+    public var vibe: String?
+
     enum CodingKeys: String, CodingKey {
         case hairColor = "hair_color"
         case eyeColor = "eye_color"
@@ -88,6 +99,9 @@ public struct SubjectObservations: Codable, Sendable, Equatable {
         case expression
         case accessories
         case backgroundHint = "background_hint"
+        case expressionRead = "expression_read"
+        case funDetails = "fun_details"
+        case vibe
     }
 
     public init(
@@ -97,7 +111,10 @@ public struct SubjectObservations: Codable, Sendable, Equatable {
         ageBand: AgeBand = .unknown,
         expression: FaceExpression = .unknown,
         accessories: [Accessory] = [],
-        backgroundHint: String = "unknown"
+        backgroundHint: String = "unknown",
+        expressionRead: String? = nil,
+        funDetails: [String] = [],
+        vibe: String? = nil
     ) {
         self.hairColor = hairColor
         self.eyeColor = eyeColor
@@ -106,6 +123,25 @@ public struct SubjectObservations: Codable, Sendable, Equatable {
         self.expression = expression
         self.accessories = accessories
         self.backgroundHint = backgroundHint
+        self.expressionRead = expressionRead
+        self.funDetails = funDetails
+        self.vibe = vibe
+    }
+
+    /// Tolerant decoding: the fun fields are optional, so older saved data
+    /// (and Classic Mode) still decode.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        hairColor = try c.decodeIfPresent(HairColor.self, forKey: .hairColor) ?? .unknown
+        eyeColor = try c.decodeIfPresent(EyeColor.self, forKey: .eyeColor) ?? .unknown
+        shirtColor = try c.decodeIfPresent(String.self, forKey: .shirtColor) ?? "unknown"
+        ageBand = try c.decodeIfPresent(AgeBand.self, forKey: .ageBand) ?? .unknown
+        expression = try c.decodeIfPresent(FaceExpression.self, forKey: .expression) ?? .unknown
+        accessories = try c.decodeIfPresent([Accessory].self, forKey: .accessories) ?? []
+        backgroundHint = try c.decodeIfPresent(String.self, forKey: .backgroundHint) ?? "unknown"
+        expressionRead = try c.decodeIfPresent(String.self, forKey: .expressionRead)
+        funDetails = try c.decodeIfPresent([String].self, forKey: .funDetails) ?? []
+        vibe = try c.decodeIfPresent(String.self, forKey: .vibe)
     }
 
     public static let unknown = SubjectObservations()

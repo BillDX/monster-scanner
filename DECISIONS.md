@@ -221,6 +221,41 @@ Measured on the Mac with `Tools/LlamaProbe` (M3 Max, Memoji test photos):
 
 A new test (`BalanceTests`) fails the build if any monster wins more than 27% or less than 4% of either mix, or if Human leaves 8–25%. The mix is my estimate of real photos; it should be checked against real scans.
 
+## D-021 — Playful, kind detail from the observer <a id="d-021"></a>
+
+**Bill's request (2026-10-21):** find more fun, kind detail in photos (hats, glasses, more nuanced expression reads, a kind funny take on expression); silly and make-believe is fine; never insulting or mean; never mention race or skin colour; very safe guardrails. The accuracy benchmark is on hold.
+
+**What changed**
+
+- Three new free-text fields in the observation JSON (after the spec's seven, which are unchanged and still decide success):
+  - `expression_read`: a kind, funny take on the expression, written as a playful comparison, up to 8 words
+  - `fun_details`: up to 3 things clearly visible, up to 5 words each (not the shirt colour)
+  - `vibe`: one silly, make-believe line about who they secretly are or what they're about to do, up to 12 words
+- They are shown and narrated, **never scored**. The verdict still comes only from code ("the model narrates, the code decides").
+  - The vibe becomes a "Field note" at the end of the dossier, typed out and read aloud.
+  - The expression read appears under Expression.
+  - The details form a new "Field notes" readout and "NOTED:" telemetry lines.
+
+**Guardrails, three layers**
+
+1. **Prompt:** warm and playful, compliments and fantasy welcome, no teasing. The free-text fields may only describe clothing, accessories, objects, pose, expression and setting, and must never mention skin or skin colour, race, ethnicity, nationality, religion, body, height, age, looks, health, hair or facial hair. "Only describe what you can clearly see; never invent items." The spec's own kindness sentences are kept word for word.
+2. **Grammar:** the free-text fields allow only letters, spaces and light punctuation, with length limits (70 and 100 characters).
+3. **Code:** each free-text field goes through `ContentPolicy` in **strict mode**, which adds unkind words ("sad", "awkward", "grumpy", "disappointing"…), age words ("old", "youthful"…) and looks words to the normal list. The normal list now also covers skin (skin, skinned, tanned, complexion), facial hair, more ethnicity and nationality words, religion, and colour-plus-person phrases ("black person", "dark-skinned"), while colours for clothes ("black hat") stay fine. A failing field is dropped on its own; the rest of the reading stays. Over-long text is dropped rather than cut mid-sentence.
+
+Strict mode applies only to AI text. Our own lines may still say the Bureau is "disappointed" by a human verdict, as in the spec.
+
+**Findings on the Mac** (`Tools/LlamaProbe`, Memoji test photos plus one with emoji props: top hat, sunglasses, coffee cup, balloons)
+
+| Prompt version | Result |
+|---|---|
+| With concrete examples, and "notice hats, glasses…" | **Copied the examples word for word** ("red bobble hat", "wizard on holiday") and invented a hat and glasses |
+| No examples, "only what you can clearly see" | Nothing invented, but bland ("happy and ready for a fun day") |
+| **Plus form guidance** (comparison for the read, fairy-tale twist for the vibe) — chosen | Props photo: "a top hat", "two red balloons", "a cup of coffee"; read "like a happy, slightly sleepy explorer"; vibe "a whimsical, coffee-sipping adventurer on a magical journey". Plain photos: nothing invented; "like a happy little sunbeam" |
+
+- **Temperature:** 0.6 gave cut-off, vaguer text than greedy, so decoding stays greedy (same photo, same reading).
+- **Crash fixed:** with temperature on, my "top-k, then grammar" sampler could pick a token the grammar forbids, and llama.cpp then throws a C++ exception, which would crash the app. Sampling now draws freely, checks that one token against the grammar, and resamples with the grammar over the whole vocabulary only if needed (llama.cpp's own method). That's always valid, and still about 105 tok/s on the Mac.
+- **Cost:** the prompt grew from 451 to 706 tokens and the output from about 65 to 95–140 tokens. The Mac went from 0.7 s to 1.1–1.6 s per photo. On the iPhone this should be about 7–9 s against the 10.3 s scan deadline ([D-018](#d-018)). **Not yet measured on the phone.**
+
 ---
 
 ## Spec issues

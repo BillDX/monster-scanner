@@ -4,6 +4,30 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — Playful, kind detail from the AI observer
+
+**Changed** ([D-021](DECISIONS.md#d-021))
+
+- New observation fields: `expression_read`, `fun_details`, `vibe`. Shown in the reveal (Field note in the dossier, read aloud; expression read; Field notes row) and in telemetry. Never scored.
+- Guardrails: prompt rules; grammar limits; strict kindness check on all AI text (unkind, age and looks words, skin, ethnicity, religion, colour-plus-person phrases). A failing field is dropped on its own.
+- Sampler fixed: check-then-resample grammar sampling, so a forbidden token can never reach llama.cpp (that would have crashed the app when sampling with temperature).
+- Parser: sunglasses win over glasses; settings don't end on filler words; over-long playful text is dropped, not chopped.
+- Template test now renders every template for every verdict (it was missing Human's templates).
+- Debug-only `-MSStubObserver` (canned playful reading) to check the reveal in the Simulator.
+
+**Measured**
+
+- Mac: correct, kind details on a props photo, nothing invented on plain photos; 1.1–1.6 s per photo (was 0.7 s). Prompt-wording experiments are in D-021.
+- Simulator, with the stub observer: the Field note renders and is narrated; the stub's sunglasses produced "Sunglasses indoors" through the normal clues.
+- 55 core tests pass; the scheme tests pass.
+- Not measured: time on the iPhone (the phone wasn't reachable at the end of this session).
+
+**Next**
+
+- Speed check on the iPhone, then real scans to judge the tone.
+
+---
+
 ## 2026-10-21 — Accuracy benchmark ready to run
 
 **Changed**

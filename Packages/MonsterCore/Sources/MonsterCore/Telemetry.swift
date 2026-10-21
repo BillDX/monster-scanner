@@ -71,6 +71,12 @@ public enum Telemetry {
             let names = Accessory.allCases.filter(worn.contains).map { $0.rawValue.uppercased() }
             lines.append(prefix + "ACCESSORIES: \(names.joined(separator: ", "))")
         }
+        if let read = o.expressionRead {
+            lines.append(prefix + "MOOD READING: \(read.uppercased())")
+        }
+        for detail in o.funDetails {
+            lines.append(prefix + "NOTED: \(detail.uppercased())")
+        }
         return lines
     }
 

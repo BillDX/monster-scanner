@@ -43,7 +43,7 @@ struct RevealView: View {
         if app.hapticsEnabled { app.haptics.revealSpike() }
         withAnimation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7)) { revealed = true }
         try? await Task.sleep(for: .milliseconds(600))
-        if app.voiceEnabled, let dossier = session.dossier { app.narrator.speak(dossier.fullText) }
+        if app.voiceEnabled, let text = session.narrationText { app.narrator.speak(text) }
     }
 
     // MARK: Sections
@@ -54,7 +54,7 @@ struct RevealView: View {
             Spacer()
             Button {
                 app.voiceEnabled.toggle()
-                if app.voiceEnabled, let dossier = session.dossier { app.narrator.speak(dossier.fullText) }
+                if app.voiceEnabled, let text = session.narrationText { app.narrator.speak(text) }
             } label: {
                 Image(systemName: app.voiceEnabled ? "speaker.wave.2.fill" : "speaker.slash")
             }
@@ -97,7 +97,7 @@ struct RevealView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "DOSSIER · AGENT K-9")
             TypewriterText(
-                text: dossier.fullText,
+                text: session.narrationText ?? dossier.fullText,
                 spokenCharacters: app.narrator.isSpeaking ? app.narrator.spokenCharacters : nil,
                 animated: revealed && !reduceMotion
             )
@@ -129,10 +129,11 @@ struct RevealView: View {
             ("EYES", label(o.eyeColor.rawValue)),
             ("SHIRT", label(o.shirtColor)),
             ("APPARENT EARTH-AGE", "\(label(o.ageBand.rawValue)) · TRUE AGE: \(verdict.trueAgeYears) YEARS"),
-            ("EXPRESSION", label(o.expression.rawValue)),
+            ("EXPRESSION", label(o.expression.rawValue) + (o.expressionRead.map { "\n“\($0)”" } ?? "")),
             ("ACCESSORIES", o.wornAccessories.isEmpty ? "NONE DETECTED"
                 : Accessory.allCases.filter(o.wornAccessories.contains).map { $0.rawValue.uppercased() }.joined(separator: ", ")),
             ("SETTING", label(o.backgroundHint)),
+            ("FIELD NOTES", o.funDetails.isEmpty ? "NONE FILED" : o.funDetails.map { $0.uppercased() }.joined(separator: "\n")),
             ("SCANNER MODE", session.modeLabel),
         ]
         return VStack(alignment: .leading, spacing: 8) {

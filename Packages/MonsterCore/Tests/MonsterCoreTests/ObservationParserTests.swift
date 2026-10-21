@@ -99,12 +99,75 @@ struct ObservationParserTests {
         #expect(Self.repairable.count + Self.failures.count == 20)
     }
 
+    // MARK: Playful fields (D-021)
+
+    static let playfulJSON = """
+    {"hair_color":"brown","eye_color":"brown","shirt_color":"red","age_band":"20s","expression":"smiling",
+     "expression_read":"grinning like they just found free cake","accessories":["hat","glasses"],
+     "fun_details":["red bobble hat","round glasses","thumbs up","fairy lights behind"],
+     "vibe":"radiates the calm of a wizard on holiday","background_hint":"living room"}
+    """
+
+    @Test("Playful fields parse and are capped")
+    func playfulFields() throws {
+        let o = try ObservationParser.parse(Self.playfulJSON).get()
+        #expect(o.expressionRead == "grinning like they just found free cake")
+        #expect(o.vibe == "radiates the calm of a wizard on holiday")
+        #expect(o.funDetails == ["red bobble hat", "round glasses", "thumbs up"])
+        #expect(o.accessories == [.hat, .glasses])
+    }
+
+    @Test("Sunglasses win over glasses; settings don't end on filler words")
+    func cleanUps() throws {
+        let raw = """
+        {"hair_color":"brown","eye_color":"brown","shirt_color":"blue","age_band":"30s","expression":"smiling",
+         "accessories":["sunglasses","hat","glasses"],"background_hint":"a pink square with lots of balloons"}
+        """
+        let o = try ObservationParser.parse(raw).get()
+        #expect(o.accessories == [.sunglasses, .hat])
+        #expect(o.backgroundHint == "a pink square")
+    }
+
+    @Test("Unkind or sensitive playful text is dropped, the rest kept")
+    func playfulGuardrails() throws {
+        let raw = """
+        {"hair_color":"brown","eye_color":"brown","shirt_color":"blue","age_band":"30s","expression":"serious",
+         "expression_read":"looking a bit sad and awkward","accessories":[],
+         "fun_details":["dark-skinned man","cool denim jacket","beard of a wizard"],
+         "vibe":"wise like an old owl","background_hint":"kitchen"}
+        """
+        let o = try ObservationParser.parse(raw).get()
+        #expect(o.expressionRead == nil)
+        #expect(o.vibe == nil)
+        #expect(o.funDetails == ["cool denim jacket"])
+        #expect(o.shirtFamily == .blue && o.expression == .serious) // core reading survives
+    }
+
+    @Test("Missing, 'unknown' or over-long playful text is handled")
+    func playfulEdgeCases() throws {
+        // The spec-only shape (no playful keys) still parses.
+        let plain = try ObservationParser.parse(Self.clean).get()
+        #expect(plain.expressionRead == nil && plain.vibe == nil && plain.funDetails.isEmpty)
+
+        let raw = """
+        {"hair_color":"brown","eye_color":"brown","shirt_color":"blue","age_band":"30s","expression":"smiling",
+         "expression_read":"unknown","accessories":[],"fun_details":"none",
+         "vibe":"one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen",
+         "background_hint":"kitchen"}
+        """
+        let o = try ObservationParser.parse(raw).get()
+        #expect(o.expressionRead == nil)
+        #expect(o.funDetails.isEmpty)
+        #expect(o.vibe == nil) // 16 words: dropped, not chopped mid-sentence
+    }
+
     // MARK: Grammar
 
     @Test("The grammar names every allowed value and all seven keys")
     func grammarCoversSchema() {
         let g = ObservationPrompt.grammar
-        for key in ["hair_color", "eye_color", "shirt_color", "age_band", "expression", "accessories", "background_hint"] {
+        for key in ["hair_color", "eye_color", "shirt_color", "age_band", "expression", "expression_read",
+                    "accessories", "fun_details", "vibe", "background_hint"] {
             #expect(g.contains("\\\"\(key)\\\""), "missing \(key)")
         }
         for value in HairColor.allCases.map(\.rawValue) + AgeBand.allCases.map(\.rawValue) + Accessory.allCases.map(\.rawValue) {
@@ -116,6 +179,7 @@ struct ObservationParserTests {
     @Test("The prompt keeps the spec's kindness rules")
     func promptKeepsKindnessRules() {
         #expect(ObservationPrompt.user.contains("Do not describe skin, body shape, weight, ethnicity"))
+        #expect(ObservationPrompt.user.contains("Never mention skin or skin colour, race, ethnicity"))
         #expect(ObservationPrompt.retryUser.hasSuffix("Return only valid JSON."))
     }
 }

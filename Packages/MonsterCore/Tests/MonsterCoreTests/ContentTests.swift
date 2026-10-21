@@ -35,17 +35,27 @@ struct ContentTests {
 
     @Test("Every template renders cleanly, under 110 words, and passes the kindness check")
     func renderedTemplates() {
-        // Render each template with clues from many different photos.
-        for (index, evidence) in Fixtures.random(count: 400).enumerated() {
+        // Render every template of every verdict with clues from many photos,
+        // whichever verdict those photos actually produce.
+        for (index, evidence) in (Fixtures.random(count: 40) + Fixtures.realistic(count: 40)).enumerated() {
             let verdict = VerdictEngine.decide(evidence, seed: Fixtures.seed(index))
             let input = DossierInput(verdict: verdict, observations: evidence.observations)
-            for template in Self.library.templates[verdict.monster] ?? [] {
-                let dossier = DossierLibrary.render(template, with: input)
-                let text = dossier.fullText
-                #expect(!text.contains("{") && !text.contains("}"), "unfilled slot: \(text)")
-                #expect(dossier.wordCount <= 110, "\(dossier.wordCount) words: \(text)")
-                #expect(ContentPolicy.isAllowed(text), "\(ContentPolicy.violations(in: text)): \(text)")
+            for monster in Monster.allCases {
+                var asMonster = input
+                asMonster.monster = monster
+                if monster == .human { asMonster.clueEvidence = ["zero capes, fangs or antennae", "a normal garlic tolerance", "no reaction to the moon"] }
+                Self.checkTemplates(for: monster, input: asMonster)
             }
+        }
+    }
+
+    static func checkTemplates(for monster: Monster, input: DossierInput) {
+        for template in library.templates[monster] ?? [] {
+            let dossier = DossierLibrary.render(template, with: input)
+            let text = dossier.fullText
+            #expect(!text.contains("{") && !text.contains("}"), "unfilled slot: \(text)")
+            #expect(dossier.wordCount <= 110, "\(dossier.wordCount) words: \(text)")
+            #expect(ContentPolicy.isAllowed(text), "\(ContentPolicy.violations(in: text)): \(text)")
         }
     }
 
@@ -113,6 +123,36 @@ struct ContentTests {
     ])
     func catchesBanned(_ text: String) {
         #expect(!ContentPolicy.isAllowed(text))
+    }
+
+    @Test("Strict mode (AI text) also blocks unkind, age and people-colour words", arguments: [
+        "Looks a bit sad today",
+        "An awkward little wave",
+        "Wise like an old owl",
+        "A black person in a hat",
+        "Pale-skinned and mysterious",
+        "Grumpy before breakfast",
+        "Her Asian street style",
+        "Wearing a hijab",
+        "Glorious beard energy",
+    ])
+    func strictBlocks(_ text: String) {
+        #expect(!ContentPolicy.isAllowed(text, strict: true), "\(text)")
+    }
+
+    @Test("Strict mode still allows playful, kind details", arguments: [
+        "grinning like they just found free cake",
+        "eyebrows quietly plotting something",
+        "red bobble hat",
+        "round tortoiseshell glasses",
+        "black leather jacket",
+        "white sneakers on the sofa",
+        "thumbs up",
+        "radiates the calm of a wizard on holiday",
+        "fairy lights behind",
+    ])
+    func strictAllows(_ text: String) {
+        #expect(ContentPolicy.isAllowed(text, strict: true), "\(ContentPolicy.violations(in: text, strict: true))")
     }
 
     @Test("The checker leaves ordinary words alone", arguments: [

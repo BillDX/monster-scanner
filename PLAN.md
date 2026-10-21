@@ -4,7 +4,7 @@ Milestones, tasks and status. Keep this in step with [PROGRESS.md](PROGRESS.md):
 
 Status key: ✅ done · 🟡 in progress · ⏸ waiting on Bill · ⬜ not started
 
-**Current milestone: M2 — benchmarked on the iPhone; waiting for Bill's 10 labelled photos.**
+**Current milestone: M2 — playful observer done; accuracy benchmark on hold (Bill's call).**
 
 ---
 
@@ -66,7 +66,9 @@ Exit check: the DECISIONS.md benchmark table is filled in.
 - ✅ Benchmark harness (Debug screen and `-MSRunBenchmark` flag); first run on the iPhone 14 Pro done
 - ✅ Fixed "nearly everyone is a robot" from Bill's first real scans; balance test added ([D-020](DECISIONS.md#d-020))
 - ⏸ Bill re-tries real scans with the rebalanced build
-- ⏸ Bill provides 10 hand-labelled photos for the accuracy column
+- ⏸ Accuracy benchmark with 10 labelled photos: on hold (Bill, 2026-10-21)
+- ✅ Playful, kind detail fields with three layers of guardrails ([D-021](DECISIONS.md#d-021))
+- ⬜ Check observation time on the iPhone with the longer prompt (expected 7–9 s, deadline 10.3 s)
 - ⬜ Evaluate Qwen3-VL-2B (llama.cpp), then Qwen3.5-2B; MLX fallback if the primary misses budget
 - ✅ Investigate `increased-memory-limit` entitlement: not needed (peak 958 MB)
 

@@ -34,6 +34,7 @@ public enum ObservationParser {
         // Case- and separator-insensitive keys: "Hair Color", "hairColor", "hair-color".
         var fields: [String: Any] = [:]
         for (key, value) in dictionary { fields[normaliseKey(key)] = value }
+        // The seven spec keys decide success; the playful keys are optional.
         let keys = ["haircolor", "eyecolor", "shirtcolor", "ageband", "expression", "accessories", "backgroundhint"]
         let found = keys.filter { fields[$0] != nil }.count
         guard found >= minimumKeys else { return .failure(.tooFewKeys(found: found)) }
@@ -46,6 +47,9 @@ public enum ObservationParser {
         observations.expression = expression(string(fields["expression"]))
         observations.accessories = accessories(fields["accessories"])
         observations.backgroundHint = freeText(string(fields["backgroundhint"]), maxWords: 4)
+        observations.expressionRead = playful(string(fields["expressionread"]), maxWords: 8)
+        observations.vibe = playful(string(fields["vibe"]), maxWords: 12)
+        observations.funDetails = details(fields["fundetails"])
         return .success(observations)
     }
 
@@ -166,19 +170,63 @@ public enum ObservationParser {
                   !result.contains(accessory) else { continue }
             result.append(accessory)
         }
+        // Sunglasses usually also read as glasses; keep one.
+        if result.contains(.sunglasses) { result.removeAll { $0 == .glasses } }
         return Array(result.prefix(3))
+    }
+
+    /// Playful free text (expression read, vibe): light punctuation allowed,
+    /// capped in length, and dropped entirely unless it passes the kindness check.
+    /// Over-long text is dropped rather than cut mid-sentence (2 words of slack).
+    static func playful(_ raw: String, maxWords: Int) -> String? {
+        let words = raw
+            .replacingOccurrences(of: #"[^A-Za-z ,.'!-]"#, with: " ", options: .regularExpression)
+            .split(whereSeparator: \.isWhitespace)
+        guard words.count <= maxWords + 2 else { return nil }
+        let cleaned = words
+            .joined(separator: " ")
+            .trimmingCharacters(in: CharacterSet(charactersIn: " ,-"))
+        let lower = cleaned.lowercased()
+        guard cleaned.count >= 3, !["unknown", "none", "n/a"].contains(lower),
+              ContentPolicy.isAllowed(cleaned, strict: true) else { return nil }
+        return cleaned
+    }
+
+    /// Up to three short, kind details; duplicates and failures dropped.
+    static func details(_ value: Any?) -> [String] {
+        var items: [String] = []
+        switch value {
+        case let list as [Any]: items = list.compactMap { $0 as? String }
+        case let s as String: items = s.split(whereSeparator: { $0 == ";" || $0 == "," }).map(String.init)
+        default: break
+        }
+        var result: [String] = []
+        for item in items {
+            guard let detail = playful(item, maxWords: 5)?.trimmingCharacters(in: CharacterSet(charactersIn: ".!")),
+                  !result.contains(where: { $0.lowercased() == detail.lowercased() }) else { continue }
+            result.append(detail)
+            if result.count == 3 { break }
+        }
+        return result
     }
 
     /// Short, letters-only free text that passes the kindness check, else "unknown".
     static func freeText(_ raw: String, maxWords: Int) -> String {
-        let cleaned = raw
+        var words = raw
             .replacingOccurrences(of: #"[^A-Za-z ,'/-]"#, with: " ", options: .regularExpression)
             .split(whereSeparator: \.isWhitespace)
             .prefix(maxWords)
+            .map { String($0) }
+        // Don't end on a dangling filler word ("a pink square with").
+        let fillers: Set<String> = ["a", "an", "the", "with", "and", "of", "in", "on", "at", "to", "by", "for"]
+        while let last = words.last, fillers.contains(last.lowercased().trimmingCharacters(in: .punctuationCharacters)) {
+            words.removeLast()
+        }
+        let cleaned = words
             .joined(separator: " ")
             .trimmingCharacters(in: CharacterSet(charactersIn: " ,'/-"))
             .lowercased()
-        guard !cleaned.isEmpty, ContentPolicy.isAllowed(cleaned) else { return "unknown" }
+        guard !cleaned.isEmpty, ContentPolicy.isAllowed(cleaned, strict: true) else { return "unknown" }
         return cleaned
     }
 }

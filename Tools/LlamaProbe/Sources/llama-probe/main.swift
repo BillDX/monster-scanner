@@ -14,6 +14,7 @@ let projectorPath = args.removeFirst()
 var useGrammar = true
 var gpuLayers: Int32 = 99
 var maxImageTokens: Int32 = 0
+var temperature: Float = 0
 var images: [String] = []
 while !args.isEmpty {
     let a = args.removeFirst()
@@ -21,6 +22,7 @@ while !args.isEmpty {
     case "--no-grammar": useGrammar = false
     case "--gpu": gpuLayers = Int32(args.removeFirst()) ?? 99
     case "--max-image-tokens": maxImageTokens = Int32(args.removeFirst()) ?? 0
+    case "--temp": temperature = Float(args.removeFirst()) ?? 0
     default: images.append(a)
     }
 }
@@ -50,7 +52,9 @@ do {
             system: ObservationPrompt.system, user: ObservationPrompt.user,
             image: .init(width: rgb.width, height: rgb.height, bytes: rgb.bytes),
             grammar: useGrammar ? ObservationPrompt.grammar : nil,
-            maxTokens: ObservationPrompt.maxTokens
+            maxTokens: ObservationPrompt.maxTokens,
+            temperature: temperature,
+            seed: UInt32(truncatingIfNeeded: rgb.bytes.reduce(UInt64(1469598103934665603)) { ($0 ^ UInt64($1)) &* 1099511628211 })
         )
         let total = Date().timeIntervalSince(start)
         print("\n== \((path as NSString).lastPathComponent) (\(rgb.width)x\(rgb.height))")
@@ -61,6 +65,9 @@ do {
         switch ObservationParser.parse(result.text) {
         case .success(let o):
             print("parsed: hair=\(o.hairColor.rawValue) eyes=\(o.eyeColor.rawValue) shirt=\(o.shirtColor) age=\(o.ageBand.rawValue) expr=\(o.expression.rawValue) acc=\(o.accessories.map(\.rawValue)) bg=\(o.backgroundHint)")
+            print("  read:    \(o.expressionRead ?? "—")")
+            print("  details: \(o.funDetails)")
+            print("  vibe:    \(o.vibe ?? "—")")
         case .failure(let f):
             print("PARSE FAILED: \(f)")
         }

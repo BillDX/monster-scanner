@@ -187,20 +187,16 @@ actor LlamaEngine {
         result.prefillSeconds = Date().timeIntervalSince(prefillStart)
         try checkStop(deadline)
 
-        // 4. Sample.
+        // 4. Sample. The grammar is a separate sampler, used llama.cpp-style:
+        // sample freely, check that one token against the grammar, and only
+        // if it's not allowed apply the grammar to the whole vocabulary and
+        // sample again. Always valid (an invalid token would make llama.cpp
+        // throw a C++ exception Swift can't catch), and fast in the common case.
         guard let sampler = llama_sampler_chain_init(llama_sampler_chain_default_params()) else {
             throw EngineError.grammarFailed
         }
         defer { llama_sampler_free(sampler) }
-        // Top-k first, so the grammar only checks 40 candidates per step
-        // instead of the whole ~150k vocabulary (about 2x faster on the Mac).
         llama_sampler_chain_add(sampler, llama_sampler_init_top_k(40))
-        if let grammar {
-            guard let grammarSampler = llama_sampler_init_grammar(vocab, grammar, "root") else {
-                throw EngineError.grammarFailed
-            }
-            llama_sampler_chain_add(sampler, grammarSampler)
-        }
         if temperature > 0 {
             llama_sampler_chain_add(sampler, llama_sampler_init_top_p(0.95, 1))
             llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature))
@@ -208,13 +204,47 @@ actor LlamaEngine {
         } else {
             llama_sampler_chain_add(sampler, llama_sampler_init_greedy())
         }
+        var grammarSampler: UnsafeMutablePointer<llama_sampler>?
+        if let grammar {
+            guard let g = llama_sampler_init_grammar(vocab, grammar, "root") else { throw EngineError.grammarFailed }
+            grammarSampler = g
+        }
+        defer { if let grammarSampler { llama_sampler_free(grammarSampler) } }
+        let vocabSize = Int(llama_vocab_n_tokens(vocab))
+        var candidates = [llama_token_data](repeating: llama_token_data(id: 0, logit: 0, p: 0), count: vocabSize)
+
+        func pick(useGrammar: Bool) -> llama_token {
+            let logits = llama_get_logits_ith(context, -1)!
+            for i in 0..<vocabSize {
+                candidates[i] = llama_token_data(id: llama_token(i), logit: logits[i], p: 0)
+            }
+            return candidates.withUnsafeMutableBufferPointer { buffer in
+                var array = llama_token_data_array(data: buffer.baseAddress, size: buffer.count, selected: -1, sorted: false)
+                if useGrammar, let grammarSampler { llama_sampler_apply(grammarSampler, &array) }
+                llama_sampler_apply(sampler, &array)
+                return array.data[Int(max(0, array.selected))].id
+            }
+        }
+
+        func grammarAllows(_ token: llama_token) -> Bool {
+            guard let grammarSampler else { return true }
+            var single = llama_token_data(id: token, logit: 1, p: 0)
+            return withUnsafeMutablePointer(to: &single) { pointer in
+                var array = llama_token_data_array(data: pointer, size: 1, selected: -1, sorted: false)
+                llama_sampler_apply(grammarSampler, &array)
+                return pointer.pointee.logit.isFinite
+            }
+        }
 
         let generateStart = Date()
         var pending: [UInt8] = []
         var pieceBuffer = [CChar](repeating: 0, count: 256)
         for _ in 0..<maxTokens {
-            let token = llama_sampler_sample(sampler, context, -1)
+            var token = pick(useGrammar: false)
+            if !grammarAllows(token) { token = pick(useGrammar: true) }
+            llama_sampler_accept(sampler, token)
             if llama_vocab_is_eog(vocab, token) { break }
+            if let grammarSampler { llama_sampler_accept(grammarSampler, token) }
             result.generatedTokens += 1
 
             let length = pieceBuffer.withUnsafeMutableBufferPointer {

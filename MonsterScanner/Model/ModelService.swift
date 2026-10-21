@@ -66,6 +66,9 @@ final class ModelService {
 
     /// The observer to use for a scan right now, or nil for Classic Mode.
     var observerForScan: (any ObservationModel)? {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-MSStubObserver") { return StubObservationModel() }
+        #endif
         guard aiEnabled, status == .ready, !Self.isTooHot else { return nil }
         return observer
     }

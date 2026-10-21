@@ -59,6 +59,15 @@ final class ScanSession {
         return verdict.monster == .human ? 100 - verdict.confidence : verdict.confidence
     }
 
+    /// The dossier plus the AI's make-believe "field note", typed and read aloud.
+    var narrationText: String? {
+        guard let dossier else { return nil }
+        guard !isInvisibleVerdict, let vibe = observations.vibe, !vibe.isEmpty else { return dossier.fullText }
+        let note = vibe.prefix(1).uppercased() + vibe.dropFirst()
+        let ending = note.hasSuffix(".") || note.hasSuffix("!") ? "" : "."
+        return dossier.fullText + "\n\nField note: " + note + ending
+    }
+
     var modeLabel: String {
         switch observationSource {
         case .classic: "CLASSIC (BACKUP CRYSTALS)"

@@ -48,7 +48,7 @@ nonisolated final class LlamaCppObservationModel: ObservationModel {
                     system: ObservationPrompt.system, user: prompt,
                     image: .init(width: rgb.width, height: rgb.height, bytes: rgb.bytes),
                     grammar: ObservationPrompt.grammar, maxTokens: ObservationPrompt.maxTokens,
-                    deadline: deadline
+                    temperature: ObservationPrompt.temperature, deadline: deadline
                 )
                 run.rawOutputs.append(result.text)
                 run.prefillSeconds += result.prefillSeconds

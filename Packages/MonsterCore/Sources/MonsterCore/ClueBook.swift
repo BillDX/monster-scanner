@@ -57,7 +57,7 @@ enum ClueBook {
             id: "vampire.collar", monster: .vampire, weight: 1.5,
             strength: { !$0.observations.wornAccessories.isDisjoint(with: [.scarf, .necklace]) ? 1 : 0 },
             evidence: { _ in "a very elegant neckline accessory" },
-            quip: { _ in "Scarf or necklace detected. Elegance level: centuries-old." }
+            quip: { _ in "Scarf or necklace detected. Elegance level: positively Transylvanian." }
         ),
     ]
 
