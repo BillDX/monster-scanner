@@ -15,6 +15,7 @@ var useGrammar = true
 var gpuLayers: Int32 = 99
 var maxImageTokens: Int32 = 0
 var temperature: Float = 0
+var compact = false
 var images: [String] = []
 while !args.isEmpty {
     let a = args.removeFirst()
@@ -23,6 +24,7 @@ while !args.isEmpty {
     case "--gpu": gpuLayers = Int32(args.removeFirst()) ?? 99
     case "--max-image-tokens": maxImageTokens = Int32(args.removeFirst()) ?? 0
     case "--temp": temperature = Float(args.removeFirst()) ?? 0
+    case "--compact": compact = true
     default: images.append(a)
     }
 }
@@ -51,7 +53,7 @@ do {
         let result = try await engine.generate(
             system: ObservationPrompt.system, user: ObservationPrompt.user,
             image: .init(width: rgb.width, height: rgb.height, bytes: rgb.bytes),
-            grammar: useGrammar ? ObservationPrompt.grammar : nil,
+            grammar: useGrammar ? (compact ? ObservationPrompt.grammar.replacingOccurrences(of: "ws ::= [ \\t\\n]{0,3}", with: "ws ::= \" \"?") : ObservationPrompt.grammar) : nil,
             maxTokens: ObservationPrompt.maxTokens,
             temperature: temperature,
             seed: UInt32(truncatingIfNeeded: rgb.bytes.reduce(UInt64(1469598103934665603)) { ($0 ^ UInt64($1)) &* 1099511628211 })

@@ -254,7 +254,20 @@ Strict mode applies only to AI text. Our own lines may still say the Bureau is "
 
 - **Temperature:** 0.6 gave cut-off, vaguer text than greedy, so decoding stays greedy (same photo, same reading).
 - **Crash fixed:** with temperature on, my "top-k, then grammar" sampler could pick a token the grammar forbids, and llama.cpp then throws a C++ exception, which would crash the app. Sampling now draws freely, checks that one token against the grammar, and resamples with the grammar over the whole vocabulary only if needed (llama.cpp's own method). That's always valid, and still about 105 tok/s on the Mac.
-- **Cost:** the prompt grew from 451 to 706 tokens and the output from about 65 to 95–140 tokens. The Mac went from 0.7 s to 1.1–1.6 s per photo. On the iPhone this should be about 7–9 s against the 10.3 s scan deadline ([D-018](#d-018)). **Not yet measured on the phone.**
+- **Cost:** the prompt grew from 451 to 706 tokens and the output from about 65 to 95–150 tokens.
+
+**Measured on the iPhone 14 Pro (Debug build, 5 test photos, 2026-10-21)**
+
+| Run | Ordinary photos | Detail-rich photo (150 tokens) | Notes |
+|---|---|---|---|
+| First build | 8.1–8.6 s | **11.0 s** (past the 10.3 s deadline) | generation 14–16 tok/s |
+| After the sampler fix below | **6.4–6.6 s** | **8.5 s** | ~20 tok/s; the 5th photo hit 14 s as the phone heated |
+| Phone already hot (thermal "serious") | 15–17 s | 20 s | real scans skip the AI at this heat ([D-018](#d-018)) |
+
+- **Sampler fix:** the check-then-resample sampler first copied all ~152k scores into Swift for every token. In a Debug build that loop cost about 25% of generation speed on the phone. The free sample now runs in llama.cpp's C sampler; only that single token is checked against the grammar, and the Swift full-vocabulary pass runs only on a rare rejection.
+- **Compact JSON spacing** (tried again with the new prompt): no token saving, and blander, padded details. Natural spacing stays.
+- **Heat matters most.** Back-to-back runs on the charger took the phone to thermal "serious", where generation runs at about half speed. At "serious" the app already uses Classic. At "fair" (state 1), detail-rich photos may miss the deadline and fall back silently. Options: a lite prompt without the playful fields while the phone is warm, or a deadline closer to 11.5 s. Not decided.
+- Valid JSON 5/5 on every run, all first try. Peak memory 978 MB.
 
 ---
 

@@ -68,7 +68,8 @@ Exit check: the DECISIONS.md benchmark table is filled in.
 - ⏸ Bill re-tries real scans with the rebalanced build
 - ⏸ Accuracy benchmark with 10 labelled photos: on hold (Bill, 2026-10-21)
 - ✅ Playful, kind detail fields with three layers of guardrails ([D-021](DECISIONS.md#d-021))
-- ⬜ Check observation time on the iPhone with the longer prompt (expected 7–9 s, deadline 10.3 s)
+- ✅ Observation time on the iPhone with the longer prompt: 6.5 s ordinary, 8.5 s detail-rich on a cool phone (deadline 10.3 s); much slower when hot ([D-021](DECISIONS.md#d-021))
+- ⬜ Decide how to handle a warm ("fair") phone: lite prompt or later deadline
 - ⬜ Evaluate Qwen3-VL-2B (llama.cpp), then Qwen3.5-2B; MLX fallback if the primary misses budget
 - ✅ Investigate `increased-memory-limit` entitlement: not needed (peak 958 MB)
 

@@ -27,6 +27,8 @@ nonisolated enum ModelBenchmark {
         var classicMatches: Int?
         var fields = 6
         var footprintMB: Double
+        /// ProcessInfo thermal state when the photo finished (0 nominal … 3 critical).
+        var thermal = 0
     }
 
     struct Report: Sendable {
@@ -53,6 +55,7 @@ nonisolated enum ModelBenchmark {
                 String(format: "Model s/scan: mean %.2f, max %.2f (first %.2f)", times.reduce(0, +) / Double(max(1, times.count)), times.max() ?? 0, times.first ?? 0),
                 String(format: "Whole pipeline s/photo: mean %.2f, max %.2f", pipeline.reduce(0, +) / Double(max(1, pipeline.count)), pipeline.max() ?? 0),
                 "Per photo (model s): " + times.map { String(format: "%.2f", $0) }.joined(separator: ", "),
+                "Thermal per photo (0 nominal … 3 critical): " + rows.map { "\($0.thermal)" }.joined(separator: ", "),
                 "Valid JSON: \(valid)/\(rows.count) (first try \(firstTry)/\(rows.count))",
                 modelAccuracy.map { String(format: "Attribute accuracy (model): %.0f%% over %d labelled photos", $0 * 100, labelled.count) }
                     ?? "Attribute accuracy: no labels.csv",
@@ -105,6 +108,7 @@ nonisolated enum ModelBenchmark {
 
             var row = Row(file: url.lastPathComponent, run: run, pipelineSeconds: Date().timeIntervalSince(pipelineStart),
                           classic: classic, footprintMB: Double(MemoryProbe.footprintBytes) / 1_048_576)
+            row.thermal = ProcessInfo.processInfo.thermalState.rawValue
             if let label = labels[url.lastPathComponent] {
                 row.modelMatches = run.observations.map { matches($0, label) } ?? 0
                 row.classicMatches = matches(classic, label)
@@ -142,7 +146,7 @@ nonisolated enum ModelBenchmark {
 
     static func writeCSV(rows: [Row], model: String, loadSeconds: Double, peak: Double, in folder: URL) throws -> String {
         func q(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\"", with: "'") + "\"" }
-        var lines = ["model,runtime,file,load_s,seconds,pipeline_s,prefill_s,gen_tokens,attempts,first_try_json,valid_json,hair,eyes,shirt,age,expression,accessories,background,model_matches,classic_matches,fields,footprint_mb,peak_mb,error"]
+        var lines = ["model,runtime,file,load_s,seconds,pipeline_s,prefill_s,gen_tokens,attempts,first_try_json,valid_json,hair,eyes,shirt,age,expression,accessories,background,model_matches,classic_matches,fields,footprint_mb,peak_mb,thermal,error"]
         for r in rows {
             let o = r.run.observations
             lines.append([
@@ -153,7 +157,8 @@ nonisolated enum ModelBenchmark {
                 o?.hairColor.rawValue ?? "", o?.eyeColor.rawValue ?? "", q(o?.shirtColor ?? ""), o?.ageBand.rawValue ?? "",
                 o?.expression.rawValue ?? "", q(o?.accessories.map(\.rawValue).joined(separator: ";") ?? ""),
                 q(o?.backgroundHint ?? ""), r.modelMatches.map(String.init) ?? "", r.classicMatches.map(String.init) ?? "",
-                "\(r.fields)", String(format: "%.0f", r.footprintMB), String(format: "%.0f", peak), q(r.run.error ?? ""),
+                "\(r.fields)", String(format: "%.0f", r.footprintMB), String(format: "%.0f", peak), "\(r.thermal)",
+                q(r.run.error ?? ""),
             ].joined(separator: ","))
         }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

@@ -192,6 +192,9 @@ actor LlamaEngine {
         // if it's not allowed apply the grammar to the whole vocabulary and
         // sample again. Always valid (an invalid token would make llama.cpp
         // throw a C++ exception Swift can't catch), and fast in the common case.
+        // On the iPhone, doing the full-vocabulary copy in Swift for every token
+        // cost about 25% of generation speed in Debug builds, so the free sample
+        // stays in C.
         guard let sampler = llama_sampler_chain_init(llama_sampler_chain_default_params()) else {
             throw EngineError.grammarFailed
         }
@@ -240,9 +243,10 @@ actor LlamaEngine {
         var pending: [UInt8] = []
         var pieceBuffer = [CChar](repeating: 0, count: 256)
         for _ in 0..<maxTokens {
-            var token = pick(useGrammar: false)
+            // Fast path in llama.cpp's C code (it also updates the chain's state);
+            // the Swift full-vocabulary pass runs only when the grammar says no.
+            var token = llama_sampler_sample(sampler, context, -1)
             if !grammarAllows(token) { token = pick(useGrammar: true) }
-            llama_sampler_accept(sampler, token)
             if llama_vocab_is_eog(vocab, token) { break }
             if let grammarSampler { llama_sampler_accept(grammarSampler, token) }
             result.generatedTokens += 1

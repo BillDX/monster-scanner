@@ -4,6 +4,27 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — Playful observer: speed on the iPhone
+
+**Changed**
+
+- Sampler: the free sample stays in llama.cpp's C code; the Swift full-vocabulary pass only runs when the grammar rejects a token. Restores ~20 tok/s on the phone (was 14–16).
+- Benchmark CSV and summary now record the phone's thermal state for each photo.
+
+**Measured (iPhone 14 Pro, Debug, 5 test photos)**
+
+- Cool phone: 6.4–6.6 s per ordinary photo, 8.5 s for the detail-rich one (150 tokens). Deadline 10.3 s. Valid JSON 5/5. Peak 978 MB.
+- Before the fix the detail-rich photo took 11.0 s (would have fallen back to Classic).
+- After several back-to-back runs on the charger the phone sat at thermal "serious" and took 15–20 s per photo; real scans use Classic at that heat.
+- Compact JSON spacing gave no saving with the new prompt (Mac).
+
+**Next**
+
+- Bill: real scans to judge the tone of the new details.
+- Decide what to do when the phone is warm ("fair"): lite prompt without the playful fields, or a later deadline.
+
+---
+
 ## 2026-10-21 — Playful, kind detail from the AI observer
 
 **Changed** ([D-021](DECISIONS.md#d-021))
