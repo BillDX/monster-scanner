@@ -120,8 +120,11 @@ final class AppModel {
     func applyDebugLaunchArguments() {
         let args = ProcessInfo.processInfo.arguments
         #if canImport(llama)
-        if args.contains("-MSRunBenchmark") {
-            Task { _ = await ModelBenchmark.runWithService(models) { _ in } }
+        // -MSRunBenchmark [set]: benchmark Documents/Benchmarks[/set] (scripts/run-benchmark.sh).
+        if let flag = args.firstIndex(of: "-MSRunBenchmark") {
+            let next = flag + 1 < args.count ? args[flag + 1] : nil
+            let set = next.flatMap { $0.hasPrefix("-") ? nil : $0 }
+            Task { _ = await ModelBenchmark.runWithService(models, set: set) { _ in } }
             return
         }
         #endif

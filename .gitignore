@@ -27,3 +27,6 @@ Vendor/
 
 # SwiftPM build output for tools
 Tools/*/.build/
+
+# Benchmark results for real people stay local
+Benchmarks/private/

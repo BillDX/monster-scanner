@@ -62,9 +62,14 @@ nonisolated enum ModelBenchmark {
         }
     }
 
-    static var folder: URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    static var folder: URL { folder(set: nil) }
+
+    /// Documents/Benchmarks, or Documents/Benchmarks/<set> for a named run.
+    static func folder(set: String?) -> URL {
+        let root = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Benchmarks", isDirectory: true)
+        guard let set, !set.isEmpty else { return root }
+        return root.appendingPathComponent(set, isDirectory: true)
     }
 
     /// Benchmarks an already-loaded model (load and verify times come from
@@ -72,13 +77,14 @@ nonisolated enum ModelBenchmark {
     @concurrent
     static func run(
         model: LlamaCppObservationModel, pack: ModelPack, loadSeconds: Double, verifySeconds: Double?,
-        progress: @escaping @Sendable (String) -> Void
+        set: String? = nil, progress: @escaping @Sendable (String) -> Void
     ) async throws -> Report {
+        let folder = folder(set: set)
         let photosFolder = folder.appendingPathComponent("photos", isDirectory: true)
         let files = ((try? FileManager.default.contentsOfDirectory(at: photosFolder, includingPropertiesForKeys: nil)) ?? [])
             .filter { ["jpg", "jpeg", "png", "heic"].contains($0.pathExtension.lowercased()) }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
-        let labels = loadLabels()
+        let labels = loadLabels(in: folder)
 
         let peak = PeakSampler()
         peak.start()
@@ -105,7 +111,7 @@ nonisolated enum ModelBenchmark {
             }
             rows.append(row)
         }
-        let csv = try writeCSV(rows: rows, model: pack.displayName, loadSeconds: loadSeconds, peak: peak.peakMB)
+        let csv = try writeCSV(rows: rows, model: pack.displayName, loadSeconds: loadSeconds, peak: peak.peakMB, in: folder)
         return Report(modelName: pack.displayName, loadSeconds: loadSeconds, verifySeconds: verifySeconds,
                       peakFootprintMB: peak.peakMB, rows: rows, csvPath: csv)
     }
@@ -117,7 +123,7 @@ nonisolated enum ModelBenchmark {
          o.expression == l.expression, o.wornAccessories == l.accessories].filter { $0 }.count
     }
 
-    static func loadLabels() -> [String: Label] {
+    static func loadLabels(in folder: URL) -> [String: Label] {
         guard let text = try? String(contentsOf: folder.appendingPathComponent("labels.csv"), encoding: .utf8) else { return [:] }
         var labels: [String: Label] = [:]
         for line in text.split(whereSeparator: \.isNewline).dropFirst() {
@@ -134,7 +140,7 @@ nonisolated enum ModelBenchmark {
         return labels
     }
 
-    static func writeCSV(rows: [Row], model: String, loadSeconds: Double, peak: Double) throws -> String {
+    static func writeCSV(rows: [Row], model: String, loadSeconds: Double, peak: Double, in folder: URL) throws -> String {
         func q(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\"", with: "'") + "\"" }
         var lines = ["model,runtime,file,load_s,seconds,pipeline_s,prefill_s,gen_tokens,attempts,first_try_json,valid_json,hair,eyes,shirt,age,expression,accessories,background,model_matches,classic_matches,fields,footprint_mb,peak_mb,error"]
         for r in rows {
@@ -162,7 +168,9 @@ extension ModelBenchmark {
     /// Waits for the app's own launch-time verify + load, then benchmarks
     /// that loaded model. Writes summary-latest.txt next to the CSV.
     @MainActor
-    static func runWithService(_ models: ModelService, progress: @escaping @Sendable (String) -> Void) async -> String {
+    static func runWithService(
+        _ models: ModelService, set: String? = nil, progress: @escaping @Sendable (String) -> Void
+    ) async -> String {
         progress("Waiting for the model to verify and load…")
         await models.prepare()
         while models.status == .verifying || models.status == .loading {
@@ -173,7 +181,7 @@ extension ModelBenchmark {
             do {
                 let report = try await run(
                     model: model, pack: models.pack, loadSeconds: load, verifySeconds: models.lastVerifySeconds,
-                    progress: progress
+                    set: set, progress: progress
                 )
                 text = report.summary
             } catch {
@@ -182,6 +190,7 @@ extension ModelBenchmark {
         } else {
             text = "Benchmark needs the model ready; status: \(models.bootLine)"
         }
+        let folder = folder(set: set)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         try? text.write(to: folder.appendingPathComponent("summary-latest.txt"), atomically: true, encoding: .utf8)
         DebugLog.shared.record("Benchmark:\n" + text)

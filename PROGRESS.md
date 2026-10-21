@@ -4,6 +4,24 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — Accuracy benchmark ready to run
+
+**Changed**
+
+- `scripts/run-benchmark.sh`: copies `Benchmarks/photos/` + `labels.csv` to the phone as a named set, runs the benchmark, and copies results to `Benchmarks/private/` (git-ignored, since the readings describe real people).
+- The benchmark reads per-set folders on the phone (`-MSRunBenchmark <set>`), so the old Memoji photos never mix into real results.
+- `Benchmarks/README.md` explains the labels and the scoring; an empty `labels.csv` template is in `Benchmarks/photos/`.
+
+**Measured**
+
+- Dry run with the Memoji set: the script found the phone and copied the photos; the launch was refused because the phone was locked (now reported plainly). The copy-back step reuses commands that worked earlier but hasn't run end to end through the script yet.
+
+**Next**
+
+- Bill adds 10 labelled photos, then runs `scripts/run-benchmark.sh` (or asks me to).
+
+---
+
 ## 2026-10-21 — Fix: nearly every subject was a robot
 
 **Found by Bill** on the first real scans with the AI observer.
