@@ -14,15 +14,15 @@ struct SettingsView: View {
                 Section("Scanner") {
                     Toggle("Agent voice", isOn: $app.voiceEnabled)
                     Toggle("Haptics", isOn: $app.hapticsEnabled)
-                    LabeledContent("Mode", value: "Classic (no AI model)")
                 }
+                ModelSettingsSection(models: app.models)
                 Section("The promise") {
                     Button("Review the consent promise") { showingConsent = true }
                     Button("How it works") { showingHowItWorks = true }
                 }
                 Section("About") {
                     LabeledContent("Version", value: BootView.version)
-                    LabeledContent("Network", value: "None")
+                    LabeledContent("Network", value: "Model download only")
                     NavigationLink("Debug log") { DebugView() }
                 }
             }
@@ -42,12 +42,76 @@ struct SettingsView: View {
     }
 }
 
+/// Download, status and removal of the AI model.
+struct ModelSettingsSection: View {
+    @Bindable var models: ModelService
+
+    var body: some View {
+        Section {
+            Toggle("Use the AI observer", isOn: $models.aiEnabled)
+            LabeledContent("Model", value: "\(models.pack.displayName) · \(models.pack.sizeText)")
+            LabeledContent("Status", value: statusText)
+            switch models.status {
+            case .unsupported:
+                Text("The AI model runs on iPhone only. The Simulator uses Classic Mode.")
+                    .foregroundStyle(.secondary)
+            case .notInstalled, .failed:
+                Button("Download (\(models.pack.sizeText))") { models.download() }
+                Toggle("Allow cellular data", isOn: $models.allowCellular)
+            case .downloading(let fraction):
+                ProgressView(value: fraction)
+                Button("Cancel download", role: .destructive) { models.cancelDownload() }
+            case .ready, .sleeping, .verifying, .loading:
+                Button("Delete model", role: .destructive) { models.deleteModel() }
+            }
+        } header: {
+            Text("AI observer")
+        } footer: {
+            Text("Downloaded once over HTTPS from Qwen's official Hugging Face repo (Apache 2.0) and checked with SHA-256. After that the app never uses the network. Wi-Fi recommended.")
+        }
+    }
+
+    private var statusText: String {
+        switch models.status {
+        case .unsupported: "Not available here"
+        case .notInstalled: "Not downloaded"
+        case .downloading(let f): "Downloading \(Int(f * 100))%"
+        case .verifying: "Checking SHA-256…"
+        case .loading: "Loading…"
+        case .ready: "Ready"
+        case .sleeping: "Installed (asleep)"
+        case .failed(let message): message
+        }
+    }
+}
+
 /// On-device only: fallbacks, errors, and the last scan's raw numbers.
 struct DebugView: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
         List {
+            Section("Memory and model") {
+                row("Footprint", MemoryProbe.megabytes(MemoryProbe.footprintBytes))
+                row("Available before limit", MemoryProbe.megabytes(MemoryProbe.availableBytes))
+                row("Thermal state", "\(ProcessInfo.processInfo.thermalState.rawValue) (0 nominal … 3 critical)")
+                row("Model status", app.models.bootLine)
+                row("Verify / load", "\(fmt(app.models.lastVerifySeconds)) s / \(fmt(app.models.lastLoadSeconds)) s")
+                #if DEBUG && canImport(llama)
+                NavigationLink("Model benchmark") { BenchmarkView() }
+                #endif
+            }
+            if let run = app.session?.modelRun {
+                Section("Last scan: AI observer") {
+                    row("Time", String(format: "%.2f s (prefill %.2f s)", run.seconds, run.prefillSeconds))
+                    row("Tokens", "\(run.promptTokens) in / \(run.generatedTokens) out")
+                    row("Attempts", "\(run.attempts)\(run.firstAttemptParsed ? "" : " (retry)")")
+                    if let error = run.error { row("Error", error) }
+                    ForEach(Array(run.rawOutputs.enumerated()), id: \.offset) { _, raw in
+                        Text(raw).font(.caption2.monospaced())
+                    }
+                }
+            }
             if let analysis = app.session?.analysis {
                 Section("Last scan: measurements") {
                     let m = analysis.evidence.measurements

@@ -32,7 +32,15 @@ struct RootView: View {
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { app.narrator.stop() }
+            switch phase {
+            case .active:
+                Task { await app.models.prepare() }
+            case .background:
+                app.narrator.stop()
+                app.models.unload(reason: "app in background")
+            default:
+                app.narrator.stop()
+            }
         }
         .alert(
             "Scanner error",

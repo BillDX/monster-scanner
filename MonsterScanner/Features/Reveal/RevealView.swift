@@ -133,7 +133,7 @@ struct RevealView: View {
             ("ACCESSORIES", o.wornAccessories.isEmpty ? "NONE DETECTED"
                 : Accessory.allCases.filter(o.wornAccessories.contains).map { $0.rawValue.uppercased() }.joined(separator: ", ")),
             ("SETTING", label(o.backgroundHint)),
-            ("SCANNER MODE", "CLASSIC (BACKUP CRYSTALS)"),
+            ("SCANNER MODE", session.modeLabel),
         ]
         return VStack(alignment: .leading, spacing: 8) {
             SectionHeader(title: "SCANNER READINGS")

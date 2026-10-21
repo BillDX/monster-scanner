@@ -32,6 +32,7 @@ final class AppModel {
 
     let haptics = Haptics()
     let narrator = Narrator()
+    let models = ModelService()
 
     @ObservationIgnored private let defaults: UserDefaults
 
@@ -42,8 +43,6 @@ final class AppModel {
         hapticsEnabled = defaults.object(forKey: Keys.haptics) as? Bool ?? true
     }
 
-    /// M1 has no model, so every scan is Classic Mode.
-    var modeLabel: String { "CLASSIC (backup crystals)" }
 
     // MARK: Flow
 
@@ -62,7 +61,7 @@ final class AppModel {
         let input = ClassicScanner.Input(
             data: data, source: source, batteryLevel: Self.batteryLevel(), now: .now
         )
-        let session = ScanSession(input: input)
+        let session = ScanSession(input: input, observer: models.observerForScan, tooHot: ModelService.isTooHot)
         self.session = session
         screen = .scanning
         Task { await run(session, secondOpinion: false) }
@@ -120,6 +119,27 @@ final class AppModel {
     /// test the pipeline in the Simulator, which has no camera.
     func applyDebugLaunchArguments() {
         let args = ProcessInfo.processInfo.arguments
+        #if canImport(llama)
+        if args.contains("-MSRunBenchmark") {
+            Task {
+                await models.prepare()
+                let verify = models.lastVerifySeconds
+                models.unload(reason: "benchmark")
+                do {
+                    let report = try await ModelBenchmark.run(pack: models.pack) { _ in }
+                    let text = report.summary + String(format: "\nSHA-256 verify at launch: %.2f s", verify ?? -1)
+                    let url = ModelBenchmark.folder.appendingPathComponent("summary-latest.txt")
+                    try? text.write(to: url, atomically: true, encoding: .utf8)
+                    DebugLog.shared.record("Benchmark:\n" + text)
+                } catch {
+                    let url = ModelBenchmark.folder.appendingPathComponent("summary-latest.txt")
+                    try? "Benchmark failed: \(error)".write(to: url, atomically: true, encoding: .utf8)
+                }
+                await models.prepare()
+            }
+            return
+        }
+        #endif
         guard let flag = args.firstIndex(of: "-MSDebugScan"), flag + 1 < args.count else { return }
         let path = args[flag + 1]
         guard let data = FileManager.default.contents(atPath: path) else {

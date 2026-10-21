@@ -4,7 +4,7 @@ Milestones, tasks and status. Keep this in step with [PROGRESS.md](PROGRESS.md):
 
 Status key: ✅ done · 🟡 in progress · ⏸ waiting on Bill · ⬜ not started
 
-**Current milestone: M2 — pre-flight done; waiting for Bill's PocketPal check and download approval.**
+**Current milestone: M2 — model running in the app; on-device benchmark next.**
 
 ---
 
@@ -54,16 +54,16 @@ Exit check: the full game loop works in airplane mode.
 
 Exit check: the DECISIONS.md benchmark table is filled in.
 
-- ⏸ Bill sanity-checks the GGUF in PocketPal on the iPhone first
+- ✅ Bill sanity-checked the GGUF in PocketPal on the iPhone
 - ✅ Verify llama.cpp release and CVEs; pinned b11799 + SHA-256 (minimum raised to b8146, [S-5](DECISIONS.md#s-5))
 - ✅ Pin Qwen3-VL-2B GGUF + mmproj files and hashes; check Qwen3.5-2B options ([D-015](DECISIONS.md#d-015))
-- ⏸ Bill approves downloading the pinned files (xcframework 67 MB, model 1.55 GB)
+- ✅ Downloads approved; files fetched and SHA-256 verified (`scripts/fetch-llama.sh`, `scripts/fetch-models.sh`)
 - ⏸ Bill approves (or not) the community Qwen3.5-2B GGUF from Unsloth, when we get there
-- ⬜ `ObservationModel` protocol; `ClassicObservationModel` and `LlamaCppObservationModel`
-- ⬜ Model downloader: official HF org over HTTPS, Wi-Fi by default, size shown, pinned SHA-256 checked before load
-- ⬜ Observation JSON call, retry once, parser tested against 20 malformed outputs
-- ⬜ 20 s timeout, thermal-state fallback, memory-warning unload, background unload, boot prewarm
-- ⬜ Benchmark harness: 10 hand-labelled photos → CSV (load, peak memory, s/scan, JSON validity, accuracy)
+- ✅ `ObservationModel` protocol and `LlamaCppObservationModel` (Classic Mode stays as the code path when no model is available)
+- 🟡 Model downloader: official HF org over HTTPS, Wi-Fi by default, size shown, pinned SHA-256 checked before load — built; in-app download not yet tried on the phone
+- ✅ Observation JSON call (grammar-constrained, [D-017](DECISIONS.md#d-017)), retry once, parser tested against 20 malformed outputs
+- ✅ 20 s timeout plus scan deadline ([D-018](DECISIONS.md#d-018)), thermal-state fallback, memory-warning unload, background unload, boot prewarm
+- 🟡 Benchmark harness: built (Debug screen and `-MSRunBenchmark` flag); waiting for the run on the phone and Bill's 10 labelled photos
 - ⬜ Evaluate Qwen3-VL-2B (llama.cpp), then Qwen3.5-2B; MLX fallback if the primary misses budget
 - ⬜ Investigate `increased-memory-limit` entitlement (do not depend on it)
 

@@ -3,9 +3,14 @@ import Foundation
 /// Scrolling fake-but-real telemetry for the scanning sequence: every line
 /// that shows a number shows a real measured value.
 public enum Telemetry {
+    /// Measurement lines, then observation lines.
     public static func lines(for e: ScanEvidence, moonName: String? = nil) -> [String] {
+        measurementLines(for: e, moonName: moonName) + observationLines(for: e)
+    }
+
+    /// Lines from code measurements only (geometry, light, moon, time, battery).
+    public static func measurementLines(for e: ScanEvidence, moonName: String? = nil) -> [String] {
         let m = e.measurements
-        let o = e.observations
         var lines: [String] = []
 
         lines.append("FACES IN FRAME: \(m.faceCount)" + (m.faceCount > 1 ? " (SCANNING LARGEST)" : ""))
@@ -20,13 +25,6 @@ public enum Telemetry {
         }
         if let yaw = m.headYawDegrees {
             lines.append("HEAD YAW: \(Fmt.deg(yaw))")
-        }
-
-        let family = o.shirtFamily
-        if let hue = m.shirtHueDegrees {
-            lines.append("SHIRT HUE: \(Int(hue.rounded()))° (SUSPICIOUSLY \(family.displayName.uppercased()))")
-        } else if family != .unknown {
-            lines.append("SHIRT: \(Fmt.shirt(e).uppercased()) (NOTED)")
         }
 
         let light = m.brightness
@@ -47,17 +45,31 @@ public enum Telemetry {
         } else {
             lines.append("BATTERY: UNREADABLE (SUSPICIOUS)")
         }
+        return lines
+    }
 
+    /// Lines from the observations (Classic sampling or the AI observer).
+    /// `prefix` marks who made them, e.g. "OBSERVER: ".
+    public static func observationLines(for e: ScanEvidence, prefix: String = "") -> [String] {
+        let m = e.measurements
+        let o = e.observations
+        var lines: [String] = []
+        let family = o.shirtFamily
+        if let hue = m.shirtHueDegrees, family != .unknown {
+            lines.append(prefix + "SHIRT HUE: \(Int(hue.rounded()))° (SUSPICIOUSLY \(family.displayName.uppercased()))")
+        } else if family != .unknown {
+            lines.append(prefix + "SHIRT: \(Fmt.shirt(e).uppercased()) (NOTED)")
+        }
         if o.expression != .unknown {
-            lines.append("EXPRESSION: \(o.expression.rawValue.uppercased())")
+            lines.append(prefix + "EXPRESSION: \(o.expression.rawValue.uppercased())")
         }
         if o.setting != .unknown {
-            lines.append("SETTING: \(o.setting.rawValue.uppercased())")
+            lines.append(prefix + "SETTING: \(o.setting.rawValue.uppercased())")
         }
         let worn = o.wornAccessories.subtracting([.mask])
         if !worn.isEmpty {
             let names = Accessory.allCases.filter(worn.contains).map { $0.rawValue.uppercased() }
-            lines.append("ACCESSORIES: \(names.joined(separator: ", "))")
+            lines.append(prefix + "ACCESSORIES: \(names.joined(separator: ", "))")
         }
         return lines
     }

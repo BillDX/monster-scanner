@@ -129,7 +129,8 @@ struct ScannerView: View {
                     .font(Theme.mono(.headline, weight: .bold))
                     .foregroundStyle(Theme.neon)
                     .crtGlow()
-                Text("MODE: CLASSIC")
+                Text(ModelService.isTooHot ? "OVERHEATING · BACKUP CRYSTALS"
+                     : app.models.observerForScan != nil ? "MODE: AI OBSERVER" : "MODE: CLASSIC")
                     .font(Theme.mono(.caption2))
                     .foregroundStyle(Theme.dimNeon)
             }

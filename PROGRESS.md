@@ -4,6 +4,29 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-21 — M2: Qwen3-VL-2B running through llama.cpp
+
+**Changed**
+
+- Fetched and verified llama.cpp b11799 and the Qwen3-VL-2B files (scripts in `scripts/`).
+- MonsterCore: observation prompt, GBNF grammar, forgiving parser (20 malformed-output tests).
+- `LlamaEngine` (Swift over the llama.cpp + mtmd C API), `LlamaCppObservationModel`, model store, downloader, `ModelService` (verify, load, unload on memory warning or background, thermal fallback).
+- Scans use the AI observer when ready, with silent Classic fallback ([D-018](DECISIONS.md#d-018)). Settings has an AI section (download, Wi-Fi only by default, delete, on/off); the boot screen shows the model status.
+- llama.cpp is linked for iPhone builds only; there's no Simulator slice ([D-016](DECISIONS.md#d-016)).
+- Debug-only benchmark harness writing CSV to the app's Documents folder.
+
+**Measured (Mac, M3 Max, Memoji test photos)**
+
+- Load 0.4 s; observation 0.7 s per photo (451 prompt tokens, 65 generated at 126 tok/s); valid JSON every time; readings correct for a cartoon.
+- Grammar over the full vocabulary was 2.3× slower, and forcing compact whitespace made the model invent accessories ([D-017](DECISIONS.md#d-017)).
+- Tests: 47 pass. Simulator build (no llama) and iPhone build (llama embedded and signed) both succeed.
+
+**Next**
+
+- Run the benchmark on the iPhone 14 Pro; then Bill's 10 hand-labelled photos for the accuracy column.
+
+---
+
 ## 2026-10-21 — M2 pre-flight
 
 **Changed**

@@ -156,6 +156,43 @@ Download for the first choice: **about 1.55 GB** (resolves [S-3](#s-3)).
 
 **Order of work** (unchanged from the spec): Qwen3-VL-2B on llama.cpp first; Qwen3.5-2B only if it beats it on accuracy at acceptable speed; MLX only if llama.cpp misses the budget or Qwen3.5 needs it.
 
+## D-016 — llama.cpp is linked for iPhone builds only <a id="d-016"></a>
+
+The prebuilt `llama-b11799-xcframework.zip` has two slices, `ios-arm64` (iPhone) and `macos-arm64_x86_64`, and **no iOS Simulator slice**. Linking it normally would break every Simulator build and the test runs.
+**Choice:**
+- The app target finds and links `llama.framework` only for the `iphoneos` SDK (`FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]`, `OTHER_LDFLAGS[sdk=iphoneos*]`).
+- A build phase (`scripts/embed-llama.sh`) copies and signs it into the app on device builds only. Script sandboxing is off for the app target so the script can write into the bundle.
+- Model code is wrapped in `#if canImport(llama)`. In the Simulator the app reports "AI model: not available in Simulator" and runs Classic Mode.
+- `Tools/LlamaProbe` (Mac command-line tool) uses the macOS slice and the same engine source, for quick testing.
+
+**Alternative not taken:** build our own xcframework from source with a Simulator slice. That's more moving parts, and it would no longer be the official prebuilt binary the spec asks for.
+
+## D-017 — Constrained JSON: grammar after top-k, natural whitespace <a id="d-017"></a>
+
+Measured on the Mac with `Tools/LlamaProbe` (M3 Max, Memoji test photos):
+
+| Setup | Generation speed | Output |
+|---|---|---|
+| No grammar | 130 tok/s | Valid JSON wrapped in a code fence (the parser copes) |
+| Grammar over the full vocabulary | 55 tok/s | Valid JSON |
+| Grammar, whitespace forced to single spaces | 55 tok/s | Valid JSON, but **invented "glasses, headphones"** on a Memoji wearing neither |
+| **Grammar after top-k 40, natural whitespace (chosen)** | **126 tok/s** | Valid JSON, correct readings |
+
+**Choice:** the GBNF grammar (in `ObservationPrompt.grammar`) guarantees the schema; it runs after a top-k of 40, so it checks 40 candidates per step instead of the full ~150k vocabulary. Whitespace stays the model's natural formatting, because squeezing it changed the answers. Greedy decoding, so the same photo gives the same observations. The forgiving parser and single retry stay as a second line of defence.
+
+## D-018 — How the model fits into the scan timing <a id="d-018"></a>
+
+- Classic measurements always run first (well under 1 s). Measurement telemetry starts straight away.
+- If the model is ready and the phone isn't hot, the observer reads a crop of the subject (face plus room for hair and shirt, at most 512 px).
+- The model call has a 20 s timeout (spec section 6). But the scan only waits until **10.3 s after the shutter**, then quietly uses Classic so the reveal starts within 12 s (spec section 1). In practice the effective timeout is about 10 s.
+- Any failure (timeout, invalid JSON twice, load error) falls back silently and is logged on the Debug screen only.
+- When the model answers, its observations replace the classic ones; code measurements are untouched. The classic shirt-hue telemetry line is kept only if the model agrees on the shirt colour.
+
+## D-019 — SHA-256 check once per launch, before the first load <a id="d-019"></a>
+
+**Choice:** before the model is loaded for the first time in each app launch, every file is hashed and compared with the pin. A mismatch deletes the files, and the app falls back to Classic until it is downloaded again. Downloads are also hashed as each file lands.
+**Reason:** this is the spec's "verify before load, refuse unverified files". The cost on the phone is measured in the M2 benchmark; if it's too slow, the fallback plan is to hash once after download and keep a size + date marker.
+
 ---
 
 ## Spec issues

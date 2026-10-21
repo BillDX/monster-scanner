@@ -18,8 +18,8 @@ struct BootView: View {
             "Charging silver-bullet capacitors… OK",
             "Consulting the moon… \(Int((MoonPhase.illumination(at: .now) * 100).rounded()))% FULL",
             "",
-            "AI MODEL: NOT INSTALLED",
-            "MODE: \(app.modeLabel)",
+            app.models.bootLine,
+            app.models.modeLine,
         ]
     }
 
@@ -63,6 +63,7 @@ struct BootView: View {
         .onTapGesture { app.finishBoot() }
         .accessibilityAction(named: "Continue") { app.finishBoot() }
         .task { await runBootSequence() }
+        .task { await app.models.prepare() } // prewarm behind the boot animation
     }
 
     private func runBootSequence() async {
