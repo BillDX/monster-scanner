@@ -81,6 +81,12 @@ Benchmarks/                M2 model benchmark results (photos are never committe
 PLAN.md · PROGRESS.md · DECISIONS.md
 ```
 
+## Licence
+
+Monster Scanner is free software under the [GNU General Public License v3.0](LICENSE) (GPL-3.0). It's copyleft: you can use, study, share and change it, and anything you distribute that's built from it must stay under the same licence, with its source available.
+
+The dependencies below keep their own licences. The model weights are not in this repository; the app downloads them separately.
+
 ## Dependencies and licences
 
 | Dependency | Version | Licence | Used for |
