@@ -6,6 +6,8 @@ A silly, fully offline iPhone party game. Point the camera at a willing friend, 
 
 It is a toy. Scanner readings may be wildly inaccurate.
 
+**Talk slides:** [Monster Scanner: Halloween edition](https://billdx.github.io/monster-scanner/slides/halloween/), from the AI Engineering meetup on local and sovereign AI. Arrow keys move between slides; N shows the speaker notes.
+
 **Status:** M3 (AI observer, Chaos Mode, sounds, reveal effects, certificate). See PLAN.md for what's left. See [PLAN.md](PLAN.md) for milestones and [PROGRESS.md](PROGRESS.md) for the log.
 
 ## Requirements
@@ -78,6 +80,7 @@ MonsterScanner/            App target: SwiftUI screens, camera, Vision, haptics,
   Resources/               Asset catalog, privacy manifest
 Packages/MonsterCore/      Pure Swift game logic + unit tests (no UI)
 Benchmarks/                M2 model benchmark results (photos are never committed)
+docs/slides/halloween/    Talk slides, published with GitHub Pages
 PLAN.md · PROGRESS.md · DECISIONS.md
 ```
 

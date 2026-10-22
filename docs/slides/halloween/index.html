@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monster Scanner: Halloween edition</title>
+<meta name="description" content="Monster Scanner: a fully offline iPhone party game running Qwen3-VL-2B on-device. Talk slides, Halloween edition.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&amp;display=swap">
+<style>
+html,body{margin:0;height:100%;background:#0b0710;overflow:hidden;font-family:Fredoka,'Trebuchet MS',sans-serif}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#deck{position:relative;width:1920px;height:1080px;transform-origin:center center;flex:none}
+#deck>section{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;box-sizing:border-box;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s linear .35s}
+#deck>section.on{opacity:1;visibility:visible;transition:opacity .35s ease}
+#deck section *{box-sizing:border-box;margin:0}
+#deck section aside{display:none}
+#deck section table{border-collapse:collapse}
+#deck section td,#deck section th{padding:.35em .6em;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+#deck section ul,#deck section ol{padding-left:1.2em}
+x-connector{display:none}
+x-shape{display:block}
+x-shape[kind=ellipse]{border-radius:50%}
+#bar{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:12px;padding:10px;color:#bfa9d6;font-size:15px;opacity:0;transition:opacity .3s}
+body:hover #bar,#bar:focus-within{opacity:1}
+#bar button{background:#352250;color:#f6eefc;border:0;border-radius:999px;padding:8px 16px;font:inherit;cursor:pointer}
+#bar button:focus-visible{outline:3px solid #8cff2e;outline-offset:2px}
+#notes{position:fixed;left:0;right:0;bottom:56px;margin:0 auto;max-width:900px;max-height:40vh;overflow:auto;background:#241733;color:#f6eefc;border-radius:20px;padding:18px 22px;font-size:17px;line-height:1.5;box-shadow:6px 6px 0 #000;display:none}
+#notes.on{display:block}
+@media (prefers-reduced-motion:reduce){#deck>section,#deck>section.on{transition:none}}
+</style>
+</head>
+<body>
+<div id="stage"><div id="deck">
+<section id="cover" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; justify-content:end; padding:176px 128px 128px; background:#17101f">
+  <img src="assets/drip-slime.svg" alt="" style="position:absolute; top:0; left:0; width:1920px; height:160px">
+  <img src="assets/splat-grape.svg" alt="" style="position:absolute; top:200px; left:1660px; width:240px; height:240px; object-fit:contain">
+  <img src="assets/splat-pumpkin.svg" alt="" style="position:absolute; top:680px; left:1520px; width:400px; height:400px; object-fit:contain">
+  <img src="assets/ghost.svg" alt="" style="position:absolute; top:300px; left:1320px; width:400px; height:467px; object-fit:contain; transform:rotate(-6deg)">
+  <p style="position:absolute; top:850px; left:1230px; width:640px; padding:16px 28px; font-family:Bungee, sans-serif; font-size:36px; line-height:1; letter-spacing:1px; text-align:center; text-transform:uppercase; color:#17101f; background:#8cff2e; border-radius:256px; box-shadow:12px 12px 0 #000000; transform:rotate(4deg)">Local &amp; sovereign AI</p>
+  <h1 style="width:1150px; font-family:Creepster, Impact, sans-serif; font-size:240px; font-weight:400; line-height:0.9; letter-spacing:2px; color:#ff7a1a; text-shadow:0 0 48px #8cff2e73">Monster<br>Scanner</h1>
+  <p style="width:1150px; font-family:Bungee, sans-serif; font-size:56px; line-height:1.05; color:#f6eefc">A Qwen 2B vision model, offline</p>
+  <p style="width:1080px; font-family:Fredoka, 'Trebuchet MS', sans-serif; font-size:36px; font-weight:500; line-height:1.3; color:#bfa9d6">A working example of using local AI on an iPhone. Qwen3-VL-2B on an iPhone 14 Pro, with no network connectivity.</p>
+  <div style="display:flex; flex-direction:row">
+    <p style="padding:12px 28px; font-family:Fredoka, 'Trebuchet MS', sans-serif; font-size:36px; font-weight:600; line-height:1; color:#f6eefc; background:#352250; border-radius:256px">AI Engineering meetup · Bill Mcintyre · October 22 2026</p>
+  </div>
+  <aside>Happy almost-Halloween. Monster Scanner is a silly iPhone party game that scans a willing friend and reveals which monster they secretly are. It runs a 2-billion-parameter vision-language model fully on the phone. After one model download it never touches the network. Tonight: what the model does, how it runs, how we made a small model reliable and kind, and what it costs in speed and heat.</aside>
+</section>
+<section id="what" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:52px">
+<img src="assets/drip-slime.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<img src="assets/splat-grape.svg" alt="" style="position:absolute;left:1680px;top:840px;width:240px;height:240px;object-fit:contain">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">A <span style="color:#8CFF2E">Monster</span> Scanner</h2>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Scan a friend. Find their inner monster.</p>
+<div style="display:flex;gap:64px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#241733;border-radius:56px;padding:48px;box-shadow:12px 12px 0px #000000">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;line-height:1.05;color:#FF7A1A">2B</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">parameters</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#241733;border-radius:56px;padding:48px;box-shadow:12px 12px 0px #000000">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;line-height:1.05;color:#8CFF2E">A16</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">iPhone 14 Pro</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#241733;border-radius:56px;padding:48px;box-shadow:12px 12px 0px #000000">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;line-height:1.05;color:#C9A2FF">0</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">network calls</p>
+</div>
+</div>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6;width:1480px">Vampire · Alien · Kaiju · Werewolf · Zombie · Robot · Ghost · Certified Human</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">02</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>The game: a scan, a drumroll, then the verdict. One of seven monsters, or, disappointingly, certified human. The 2B is a 2-billion-parameter vision-language model, running on the iPhone 14 Pro’s A16 chip with 6 GB of memory. After one model download the app makes zero network calls, so the whole thing works in airplane mode.</aside>
+</section>
+<section id="rule" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:176px 128px; background:#17101f">
+  <img src="assets/drip-slime.svg" alt="" style="position:absolute; top:0; left:0; width:1920px; height:160px">
+  <img src="assets/splat-pumpkin.svg" alt="" style="position:absolute; top:170px; left:1600px; width:300px; height:300px; object-fit:contain">
+  <h1 style="width:1440px; font-family:Creepster, Impact, sans-serif; font-size:176px; font-weight:400; line-height:0.95; letter-spacing:2px; color:#8cff2e">AI (monster) Brain, Deterministic Wrapper</h1>
+  <p style="font-family:Bungee, sans-serif; font-size:56px; line-height:1.05; color:#f6eefc">The model only narrates</p>
+  <div style="display:flex; flex-direction:row; gap:64px; padding:32px 0 0">
+    <div style="display:flex; flex-direction:column; gap:24px; flex:1; padding:48px; background:#241733; border-radius:56px; box-shadow:12px 12px 0 #000000">
+      <div style="display:flex; flex-direction:row">
+        <p style="padding:16px 28px; font-family:Bungee, sans-serif; font-size:36px; line-height:1; letter-spacing:1px; text-transform:uppercase; color:#17101f; background:#a560ff; border-radius:256px; box-shadow:12px 12px 0 #000000; transform:rotate(-6deg)">The model</p>
+      </div>
+      <p style="font-family:Fredoka, 'Trebuchet MS', sans-serif; font-size:56px; font-weight:500; line-height:1.35; color:#f6eefc">Describes the photo and adds playful lines.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:24px; flex:1; padding:48px; background:#241733; border-radius:56px; box-shadow:12px 12px 0 #000000, 0 0 48px #8cff2e73">
+      <div style="display:flex; flex-direction:row">
+        <p style="padding:16px 28px; font-family:Bungee, sans-serif; font-size:36px; line-height:1; letter-spacing:1px; text-transform:uppercase; color:#17101f; background:#8cff2e; border-radius:256px; box-shadow:12px 12px 0 #000000; transform:rotate(4deg)">The code</p>
+      </div>
+      <p style="font-family:Fredoka, 'Trebuchet MS', sans-serif; font-size:56px; font-weight:500; line-height:1.35; color:#f6eefc">Measures, decides and checks every AI sentence.</p>
+    </div>
+  </div>
+  <p style="position:absolute; bottom:56px; left:128px; width:112px; padding:12px 0; font-family:Bungee, sans-serif; font-size:36px; line-height:1; text-align:center; color:#f6eefc; background:#352250; border-radius:256px">03</p>
+  <p style="position:absolute; bottom:60px; left:272px; width:1200px; font-family:Fredoka, 'Trebuchet MS', sans-serif; font-size:36px; font-weight:500; line-height:1.3; color:#bfa9d6">Monster Scanner · Halloween edition</p>
+  <aside>The model narrates, the code decides. This is the one rule the whole design follows. Deterministic Swift measures the photo and picks the verdict. The model only describes what it sees and adds playful lines. The game is complete without the model, which we call Classic Mode, so every AI failure falls back silently.</aside>
+</section>
+<section id="architecture" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-slime.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">How It <span style="color:#8CFF2E">Works</span></h2>
+
+<div style="position:relative;width:1664px;height:546px">
+<div style="position:absolute;left:0px;top:198px;width:240px;height:150px;background:#241733;border-radius:40px;padding:24px 28px;display:flex;flex-direction:column;gap:10px">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#F6EEFC">Photo</h3>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">In memory</p>
+</div>
+<div style="position:absolute;left:320px;top:0px;width:640px;height:240px;background:#241733;border-radius:40px;padding:24px 28px;display:flex;flex-direction:column;gap:10px">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">Classic · always</h3>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Vision: face, tilt, eyes<br>Labels: hats, glasses<br>Pixels, clock, moon</p>
+</div>
+<div style="position:absolute;left:320px;top:306px;width:640px;height:240px;background:#8CFF2E;border-radius:40px;padding:24px 28px;display:flex;flex-direction:column;gap:10px;box-shadow:0px 0px 48px rgba(140, 255, 46, 0.45)">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#17101F">AI observer</h3>
+<p style="font-size:36px;font-weight:600;line-height:1.3;color:#17101F">Qwen3-VL-2B, llama.cpp<br>Grammar-forced JSON<br>Strict kindness check</p>
+</div>
+<div style="position:absolute;left:1072px;top:0px;width:592px;height:240px;background:#241733;border-radius:40px;padding:24px 28px;display:flex;flex-direction:column;gap:10px">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">Verdict engine</h3>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Deterministic Swift<br>Seeded by the photo<br>47 clues: clothes, pose</p>
+</div>
+<div style="position:absolute;left:1072px;top:306px;width:592px;height:240px;background:#241733;border-radius:40px;padding:24px 28px;display:flex;flex-direction:column;gap:10px">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">Reveal</h3>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Code-written jokes<br>AI’s playful lines<br>Voice, sound, haptics</p>
+</div>
+<x-connector x1="240" y1="273" x2="280" y2="273" head="none" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="280" y1="120" x2="280" y2="426" head="none" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="280" y1="120" x2="320" y2="120" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="280" y1="426" x2="320" y2="426" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="960" y1="120" x2="1072" y2="120" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="960" y1="366" x2="1016" y2="366" head="none" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="1016" y1="366" x2="1016" y2="200" head="none" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="1016" y1="200" x2="1072" y2="200" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="1368" y1="240" x2="1368" y2="306" style="color:#BFA9D6;border-width:4px"></x-connector>
+<x-connector x1="960" y1="490" x2="1072" y2="490" style="color:#8CFF2E;border-width:4px;border-style:dashed"></x-connector>
+<x-connector x1="640" y1="306" x2="640" y2="240" style="color:#BFA9D6;border-width:4px;border-style:dashed"></x-connector>
+<p style="position:absolute;left:318px;top:249px;width:306px;text-align:right;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">late or hot: skip</p>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">04</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>Every scan runs Classic measurements first, in under a second, using only Apple’s Vision models and pixel sampling. If the AI model is loaded and the phone isn’t hot, the observer reads a crop of the subject at the same time: Qwen3-VL-2B on llama.cpp, with a grammar that forces the JSON shape and a strict kindness check on all its text. Both lanes feed one deterministic verdict engine, seeded by a SHA-256 of the photo, with 47 clues on clothes, accessories, timing, pose and setting. The AI’s playful lines, the dashed green line, go straight to the reveal and are never scored. If the model is late, the phone is hot, or the JSON is invalid, the scan quietly uses Classic Mode.</aside>
+</section>
+<section id="model" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<img src="assets/splat-pumpkin.svg" alt="" style="position:absolute;left:1340px;top:210px;width:480px;height:480px;object-fit:contain">
+<img src="assets/splat-grape.svg" alt="" style="position:absolute;left:1440px;top:660px;width:380px;height:380px;object-fit:contain">
+<p style="position:absolute;left:1340px;top:392px;width:480px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:56px;line-height:1.05;color:#17101F">1.55 GB</p>
+<p style="position:absolute;left:1340px;top:458px;width:480px;text-align:center;font-size:36px;font-weight:600;line-height:1.3;color:#17101F">on disk</p>
+<p style="position:absolute;left:1440px;top:772px;width:380px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:56px;line-height:1.05;color:#17101F">&lt; 1 GB</p>
+<p style="position:absolute;left:1440px;top:838px;width:380px;text-align:center;font-size:36px;font-weight:600;line-height:1.3;color:#17101F">peak memory</p>
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Meet <span style="color:#FF7A1A">Qwen3-VL-2B</span></h2>
+<table style="width:1100px;font-family:'Fredoka', 'Trebuchet MS', sans-serif;font-size:56px;color:#F6EEFC">
+<tr style="background:#352250"><th style="width:52%;text-align:left;font-weight:600">Part</th><th style="width:20%;text-align:left;font-weight:600">Bits</th><th style="width:28%;text-align:right;font-weight:600">Size</th></tr>
+<tr style="background:#241733"><td>Language model</td><td>4-bit</td><td style="text-align:right">1,107 MB</td></tr>
+<tr style="background:#241733"><td>Vision projector</td><td>8-bit</td><td style="text-align:right">445 MB</td></tr>
+</table>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6;width:1100px">Apache 2.0 open weights from the official Qwen org. Files: Qwen3VL-2B-Instruct-Q4_K_M and mmproj-Qwen3VL-2B-Instruct-Q8_0, both GGUF.</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">05</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1000px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>One small open-weights vision-language model does all the AI work. Two GGUF files: the language model at 4-bit, Q4_K_M, and the vision projector at 8-bit, Q8_0. The projector turns the photo into tokens the language model can read. Together 1.55 GB on disk, and under 1 GB of memory at peak on the phone: 953 to 978 MB in our runs.</aside>
+</section>
+<section id="jobs" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Three <span style="color:#FF7A1A">Jobs</span></h2>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#241733;border-radius:56px;padding:40px;box-shadow:12px 12px 0px #000000">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;line-height:1.05;color:#FF7A1A">1</p>
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:56px;font-weight:400;line-height:1.05;color:#F6EEFC">Observer</h3>
+<div style="display:flex">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#8CFF2E;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(-6deg)">Every scan</p>
+</div>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Reads the photo, returns JSON</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#241733;border-radius:56px;padding:40px;box-shadow:12px 12px 0px #000000">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;line-height:1.05;color:#8CFF2E">2</p>
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:56px;font-weight:400;line-height:1.05;color:#F6EEFC">Chaos Mode</h3>
+<div style="display:flex">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#FF7A1A;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(4deg)">Opt-in</p>
+</div>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Scores monsters; code clamps</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#241733;border-radius:56px;padding:40px;box-shadow:12px 12px 0px #000000">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;line-height:1.05;color:#C9A2FF">3</p>
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:56px;font-weight:400;line-height:1.05;color:#F6EEFC">AI Notes</h3>
+<div style="display:flex">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#A560FF;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(-6deg)">Experimental</p>
+</div>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Streams checked notes</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">06</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>What the model does in the app. One: the observer runs on every scan. A crop of at most 512 pixels in, JSON out, with hair, eye and shirt colour, age band, expression, accessories and setting, plus three playful fields that are shown but never scored. Two: Chaos Mode, opt-in. The same call returns a 0 to 100 score per monster; code clamps them, the top one wins, and anything under 40 becomes certified human. Three: AI field notes, experimental and off by default. After the reveal it streams a short postscript, one checked sentence at a time, so it can never delay the reveal.</aside>
+</section>
+<section id="why" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Why This <span style="color:#FF7A1A">Model</span></h2>
+<div style="display:flex;gap:64px">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Official GGUFs from Qwen itself</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">llama.cpp runs its architecture</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Fits beside the camera on 6 GB</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Apache 2.0: free to ship</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Tested in PocketPal first</p>
+</div>
+<div style="width:600px;display:flex;flex-direction:column;gap:24px;background:#241733;border-radius:56px;padding:48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:56px;font-weight:400;line-height:1.05;color:#C9A2FF">Not (yet)</h3>
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC">Qwen3.5-2B</p>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">No official GGUF yet</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC">MLX</p>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">The fallback runtime</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC">F16 projector</p>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">819 MB, kept in reserve</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">07</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>The choice came down to provenance and support. It was the spec’s first choice, with official GGUF files from Qwen itself. The pinned llama.cpp build supports its architecture: the qwen3vl text model and the QWEN3VL projector. At 4-bit it fits next to the camera and UI on a 6 GB phone, and Apache 2.0 lets it ship in an app. A quick feasibility check in PocketPal came before any integration code. Qwen3.5-2B is the upgrade candidate, but it only has a community GGUF from Unsloth, which needs approval first. MLX, with mlx-swift-lm 3.32.3, stays the fallback runtime. The F16 projector, 819 MB, was kept in reserve in case Q8_0 hurt accuracy.</aside>
+</section>
+<section id="runtime" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:32px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">llama.cpp on <span style="color:#FF7A1A">Metal</span></h2>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Official prebuilt xcframework · build b11799 · MIT · mtmd for images</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:40px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">No Simulator slice</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Device builds only</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:40px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">A Swift actor</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Main thread stays free</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:40px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">Lifecycle</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Loads in 0.73 s</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:40px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">A Mac twin</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">126 tokens/s on a Mac</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">08</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>The model runs on the A16’s GPU through llama.cpp’s official prebuilt xcframework, build b11799, MIT licensed. Its mtmd library handles image input. The catch: there is no Simulator slice, only iPhone and Mac, so llama.cpp links into device builds only and the Simulator plays Classic Mode. The Swift wrapper, LlamaEngine, is an actor on its own serial queue, so blocking C calls never touch the main thread. The lifecycle: verify the files, load in 0.73 seconds, unload on a memory warning or in the background, skip when hot. And a Mac twin, LlamaProbe, runs the same engine source at 126 tokens a second, so prompt experiments skip the phone.</aside>
+</section>
+<section id="grammar" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:44px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">JSON <span style="color:#8CFF2E">Every</span> Time</h2>
+<table style="width:1664px;font-family:'Fredoka', 'Trebuchet MS', sans-serif;font-size:36px;color:#F6EEFC">
+<tr style="background:#352250"><th style="width:46%;text-align:left;font-weight:600">Setup (Mac, LlamaProbe)</th><th style="width:18%;text-align:right;font-weight:600">Tokens/s</th><th style="width:36%;text-align:left;font-weight:600">Output</th></tr>
+<tr style="background:#241733"><td>No grammar</td><td style="text-align:right">130</td><td>JSON in a code fence</td></tr>
+<tr style="background:#241733"><td>Grammar, full ~152k vocabulary</td><td style="text-align:right">55</td><td>Valid JSON</td></tr>
+<tr style="background:#241733"><td>Grammar, whitespace squeezed</td><td style="text-align:right">55</td><td>Invented “glasses, headphones”</td></tr>
+<tr style="background:#241733"><td>Grammar after top-k 40</td><td style="text-align:right">126</td><td>Valid; crashes above temp 0</td></tr>
+<tr style="background:#FF7A1A"><td style="color:#17101F"><b>Check-then-resample (shipped)</b></td><td style="text-align:right;color:#17101F"><b>~105</b></td><td style="color:#17101F"><b>Always valid</b></td></tr>
+</table>
+<div style="display:flex">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#8CFF2E;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(-4deg)">5 of 5 valid on the phone</p>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">09</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>A GBNF grammar fixes the JSON shape at sampling time; the sampler decides what it costs. Without help, a 2B model wraps its JSON in code fences and invents accessories. A grammar over the full 152k vocabulary more than halves speed. Top-k first was fast but crashed once temperature was on, because it could pick a token the grammar forbids and llama.cpp throws a C++ exception. The shipped sampler draws one token freely, checks only that token, and resamples over the whole vocabulary only on a rare rejection. That is llama.cpp’s own approach. Result: valid JSON on every run, 5 of 5 on the phone, first try each time.</aside>
+</section>
+<section id="prompts" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:44px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Four More <span style="color:#FF7A1A">Lessons</span></h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:40px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#8CFF2E">Keep loops in C</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Swift loop: −25% speed</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:40px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#8CFF2E">Decode greedily</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Same photo, same reading</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:40px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#8CFF2E">Examples get copied</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Show style, not samples</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:40px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#8CFF2E">Only what you see</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">No more invented hats</p>
+</div>
+</div>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">On a props photo: “a top hat” · “two red balloons” · “like a happy, slightly sleepy explorer”</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">10</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>Four more lessons. An early sampler copied every score into Swift for every token: 14 to 16 tokens a second on the phone instead of about 20, roughly a quarter of the speed gone. Greedy decoding, temperature 0, keeps readings reproducible; 0.6 was vaguer. Examples in a prompt get copied word for word: show a red bobble hat and it reports red bobble hats, so describe the style instead. And “only describe what you can clearly see; never invent items” stopped the invented hats and glasses. A parser that strips code fences, plus one retry, is the last line of defence; two failures means a silent fall back to Classic.</aside>
+</section>
+<section id="guardrails" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:40px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<img src="assets/splat-slime.svg" alt="" style="position:absolute;left:1270px;top:320px;width:460px;height:460px;object-fit:contain">
+<p style="position:absolute;left:1270px;top:466px;width:460px;text-align:center;font-family:'Creepster', 'Bungee', Impact, sans-serif;font-size:176px;line-height:0.95;color:#17101F">0</p>
+<p style="position:absolute;left:1200px;top:790px;width:592px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">unkind sentences kept, out of 187 in 50 field notes</p>
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Three <span style="color:#8CFF2E">Safety</span> Layers</h2>
+<div style="width:1008px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:20px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">1 · Prompt rules</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Clothes, props, pose, setting</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:20px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">2 · Grammar limits</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Letters only, 100 chars max</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:20px 48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">3 · Kindness check in model</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Safety reinforced in code</p>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Word lists: unkind, age, looks, stereotypes</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">11</p>
+<p style="position:absolute;left:272px;bottom:60px;width:900px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>The model never decides anything that is scored, except in opt-in Chaos Mode. Every piece of AI text passes three layers: prompt rules, grammar limits, and a kindness check in the model, with safety reinforced in code. Word lists cover unkind, age, looks and stereotype words, and a failing field is dropped on its own. Clothing colours like “black hat” stay fine; colour-plus-person phrases do not. Streamed field notes are held a sentence at a time and dropped if unkind, if they name another monster, or if they echo the instructions. In a 50-note test: 187 sentences kept, 13 dropped, none unkind. AI-written dossiers looped and copied their examples, so the comedy is code: 64 templates, exhibit jokes that slot in what the AI spotted, and the Bureau’s reasoning.</aside>
+</section>
+<section id="performance" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:24px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Fast When <span style="color:#8CFF2E">Cool</span></h2>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Seconds per photo · dot = middle of the measured range · final prompt unless noted</p>
+<svg aria-label="AI observation time per photo by setup. A cool iPhone answers in 6.4 to 8.5 seconds, inside the 9.5 second model deadline; a hot one takes 15 to 20 seconds." style="position:absolute;left:128px;top:400px" width="1664" height="500" viewBox="0 0 1664 500"><line x1="600" y1="20" x2="600" y2="450" stroke="#352250" stroke-width="3"/><line x1="810" y1="20" x2="810" y2="450" stroke="#352250" stroke-width="3"/><line x1="1020" y1="20" x2="1020" y2="450" stroke="#352250" stroke-width="3"/><line x1="1230" y1="20" x2="1230" y2="450" stroke="#352250" stroke-width="3"/><line x1="1440" y1="20" x2="1440" y2="450" stroke="#352250" stroke-width="3"/><line x1="999" y1="10" x2="999" y2="450" stroke="#FF7A1A" stroke-width="4" stroke-dasharray="14 10"/><line x1="646" y1="60" x2="667" y2="60" stroke="#BFA9D6" stroke-width="10" stroke-linecap="round"/><circle cx="657" cy="60" r="13" fill="#BFA9D6"/><line x1="784" y1="132" x2="791" y2="132" stroke="#BFA9D6" stroke-width="10" stroke-linecap="round"/><circle cx="787" cy="132" r="13" fill="#BFA9D6"/><line x1="869" y1="204" x2="877" y2="204" stroke="#8CFF2E" stroke-width="10" stroke-linecap="round"/><circle cx="873" cy="204" r="13" fill="#8CFF2E"/><circle cx="957" cy="276" r="13" fill="#8CFF2E"/><circle cx="1062" cy="348" r="13" fill="#BFA9D6"/><line x1="1230" y1="420" x2="1440" y2="420" stroke="#BFA9D6" stroke-width="10" stroke-linecap="round"/><circle cx="1335" cy="420" r="13" fill="#BFA9D6"/></svg>
+<p style="position:absolute;left:1139px;top:388px;width:400px;font-size:36px;font-weight:600;line-height:1.3;color:#FF7A1A">9.5 s model deadline</p>
+<p style="position:absolute;left:128px;top:436px;width:470px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Mac M3 Max, final prompt</p>
+<p style="position:absolute;left:128px;top:508px;width:470px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">iPhone, short prompt</p>
+<p style="position:absolute;left:128px;top:580px;width:470px;font-size:36px;font-weight:600;line-height:1.3;color:#F6EEFC">iPhone, ordinary photo</p>
+<p style="position:absolute;left:128px;top:652px;width:470px;font-size:36px;font-weight:600;line-height:1.3;color:#F6EEFC">iPhone, detail-rich photo</p>
+<p style="position:absolute;left:128px;top:724px;width:470px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Before the sampler fix</p>
+<p style="position:absolute;left:128px;top:796px;width:470px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Hot iPhone (“serious”)</p>
+<p style="position:absolute;left:810px;top:436px;width:200px;font-size:36px;font-weight:600;line-height:1.3;color:#BFA9D6">1.1–1.6 s</p>
+<p style="position:absolute;left:946px;top:508px;width:200px;font-size:36px;font-weight:600;line-height:1.3;color:#BFA9D6">4.4–4.5 s</p>
+<p style="position:absolute;left:770px;top:580px;width:200px;text-align:right;font-size:36px;font-weight:600;line-height:1.3;color:#8CFF2E">6.4–6.6 s</p>
+<p style="position:absolute;left:852px;top:652px;width:200px;text-align:right;font-size:36px;font-weight:600;line-height:1.3;color:#8CFF2E">8.5 s</p>
+<p style="position:absolute;left:1222px;top:724px;width:200px;font-size:36px;font-weight:600;line-height:1.3;color:#BFA9D6">11 s</p>
+<p style="position:absolute;left:1592px;top:796px;width:200px;font-size:36px;font-weight:600;line-height:1.3;color:#BFA9D6">15–20 s</p>
+<p style="position:absolute;left:668px;top:862px;width:120px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">0 s</p>
+<p style="position:absolute;left:878px;top:862px;width:120px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">5 s</p>
+<p style="position:absolute;left:1088px;top:862px;width:120px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">10 s</p>
+<p style="position:absolute;left:1298px;top:862px;width:120px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">15 s</p>
+<p style="position:absolute;left:1508px;top:862px;width:120px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">20 s</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">12</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1400px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Source: LlamaProbe (Mac) · in-app benchmark (iPhone 14 Pro, Debug)</p>
+<aside>On a cool iPhone 14 Pro the observer answers in 6.4 to 8.5 seconds, inside its 9.5-second deadline. The green rows are what ships. The scan ends by 10 seconds and a 1.1-second drumroll covers the rest, so the reveal lands inside the 12-second budget. Before the sampler fix, the detail-rich photo took 11 seconds and would have fallen back to Classic. A hot phone takes 15 to 20 seconds, so at thermal “serious” the app skips the model.</aside>
+</section>
+<section id="heat" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-pumpkin.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<img src="assets/splat-pumpkin.svg" alt="" style="position:absolute;left:1300px;top:280px;width:460px;height:460px;object-fit:contain">
+<p style="position:absolute;left:1300px;top:452px;width:460px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:56px;line-height:1.05;color:#17101F">9.1 s</p>
+<p style="position:absolute;left:1300px;top:516px;width:460px;text-align:center;font-size:36px;font-weight:600;line-height:1.3;color:#17101F">worst reveal</p>
+<p style="position:absolute;left:1300px;top:752px;width:460px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">budget: 12 s</p>
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Heat Is the <span style="color:#FF7A1A">Monster</span></h2>
+<div style="width:1080px;display:flex;flex-direction:column;gap:24px">
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">“Serious” heat = half speed</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Then the app skips the model</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Soak: “fair” at 6, “serious” at 8</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Scans 9–10 used Classic. No crash.</p>
+</div>
+<div style="display:flex;gap:48px">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#8CFF2E;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(-6deg)">Load 0.73 s</p>
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#A560FF;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(4deg)">~20 tokens/s</p>
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#FF4FAE;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(-6deg)">978 MB peak</p>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">13</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>Raw speed was fine on a cool phone. Heat was the real monster. Back-to-back scans on the charger took the phone to thermal “fair” at scan 6 and “serious” at scan 8, where generation runs at about half speed. Rather than tune a faster prompt, the app simply skips the model when hot, and scans 9 and 10 used Classic Mode with no crash. The worst shutter-to-reveal in the 10-scan soak was 9.1 seconds, against a 12-second budget. Other numbers: model load 0.73 seconds, about 20 tokens a second on the phone (105 to 126 on the Mac), 978 MB peak memory, and a 1.41-second SHA-256 check at launch.</aside>
+</section>
+<section id="sovereignty" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-grape.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Works <span style="color:#8CFF2E">Offline</span></h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px">
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 40px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">One download</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">HTTPS, pinned, Wi-Fi only</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 40px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">Pinned by hash</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">SHA-256 every launch</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 40px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">Checked first</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">GitHub, HF and CVE lists</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 40px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">One binary</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">llama.cpp + Qwen, that’s it</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 40px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">Nothing stored</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Photos stay in memory</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 40px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">Approval gate</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">New stuff needs a human yes</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">14</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>After a one-time 1.55 GB download, photos, model and results never leave the phone; it works in airplane mode. The only network code is the model download: HTTPS to the official Qwen org on Hugging Face, pinned to one repo commit, size shown first, Wi-Fi only by default. The runtime and both model files are pinned by SHA-256 and hashed again before the first load every launch, 1.41 seconds on the phone; a mismatch deletes the files and the app stays in Classic Mode. The build and repo were checked against GitHub, Hugging Face and the NIST CVE database first. One binary (llama.cpp, MIT) and one set of weights (Apache 2.0): no analytics, ads or accounts. Photos stay in memory, there is no face recognition, and shared images carry no metadata. New dependencies, network calls and permissions need the owner’s yes.</aside>
+</section>
+<section id="apple" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-grape.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Apple Does the <span style="color:#FF7A1A">Rest</span></h2>
+<table style="width:1664px;font-family:'Fredoka', 'Trebuchet MS', sans-serif;font-size:36px;color:#F6EEFC">
+<tr style="background:#352250"><th style="width:34%;text-align:left;font-weight:600">Framework</th><th style="width:66%;text-align:left;font-weight:600">Used for</th></tr>
+<tr style="background:#241733"><td><b>Vision, Core Image</b></td><td>Face geometry, smiles, blinks, hats and setting</td></tr>
+<tr style="background:#241733"><td><b>AVFoundation, Core Haptics</b></td><td>Camera, narration voice, synthesised sounds, haptics</td></tr>
+<tr style="background:#241733"><td><b>SwiftUI</b></td><td>Every screen and the certificate image</td></tr>
+<tr style="background:#241733"><td><b>PhotosUI</b></td><td>Photo import with no library permission</td></tr>
+<tr style="background:#241733"><td><b>CryptoKit</b></td><td>SHA-256 checks and the per-photo seed</td></tr>
+<tr style="background:#241733"><td><b>URLSession</b></td><td>The model download: the only network code</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">15</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>Apart from llama.cpp, everything is Apple’s own on-device frameworks. Classic Mode uses no model of ours at all, only the models built into Vision: face rectangles and landmarks, plus Apple’s built-in image classifier, read through an allow-list of labels such as hats, sunglasses, beach or kitchen. Core Image adds smile and blink flags. Hair and shirt colour and blur are plain pixel sampling in Swift. ImageIO reads a photo’s capture time for the time-of-day clues, and ProcessInfo’s thermal state drives the heat fallback.</aside>
+</section>
+<section id="tooling" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-grape.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Built by an <span style="color:#8CFF2E">Agent</span></h2>
+<div style="display:flex;gap:64px">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#8CFF2E">Claude Code (Opus 5.5)</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Wrote it all, built, deployed</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#8CFF2E">Helper agents</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Sounds, effects, certificate</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#8CFF2E">LlamaProbe</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Same engine, on the Mac</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#8CFF2E">devicectl + tests</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Benchmarks, soak, 76 tests</p>
+</div>
+</div>
+<div style="width:600px;display:flex;flex-direction:column;gap:12px;background:#241733;border-radius:56px;padding:48px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">Working agreement</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Logs kept together</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Small commits</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Ask before adding</p>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Flag spec problems</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">16</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>An AI coding agent, Claude Code running Claude Opus 5.5, built the app from a written spec: the code, tests, scripts and docs. It built and deployed to the Simulator and the iPhone from the command line and ran the benchmarks. Helper agents in separate git worktrees built the sound effects, reveal effects and certificate in parallel. LlamaProbe is a Mac CLI on the same engine source, for prompt experiments. devicectl and scripts ran the benchmarks, a 10-scan soak and a 50-note kindness check; Swift Testing runs 76 tests covering verdict balance, kindness, the parser and determinism. The working agreement: plan, progress and decision logs updated together; small commits with human review at every milestone; ask before any dependency, network call or permission; flag spec problems rather than silently improvising.</aside>
+</section>
+<section id="lessons" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:56px">
+<img src="assets/drip-grape.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Nine <span style="color:#FF7A1A">Lessons</span></h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">Model only sees</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Code decides</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#8CFF2E">Use a grammar</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">No broken JSON</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">Loops in C</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Swift cost 25%</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">Design for heat</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Plan a fallback</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#8CFF2E">Describe style</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Don’t show it</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">Build a Mac twin</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">1-second tests</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#FF7A1A">AI is optional</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Failures vanish</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#8CFF2E">Pin and verify</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Hash every file</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#241733;border-radius:56px;padding:24px 32px;box-shadow:12px 12px 0px #000000">
+<h3 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;font-weight:400;line-height:1;color:#C9A2FF">Seed everything</h3>
+<p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Test the mix</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">17</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>The biggest lesson: give a small local model the job it is good at, looking and describing, and keep judgement, jokes and safety in code. A grammar turned usually-JSON into always-valid JSON, but the sampler design decides whether that costs a few percent or more than half your speed. One Swift loop over the vocabulary cost about 25% of phone speed, so keep per-token work in C. Heat, not peak speed, is the phone’s real limit: plan the fallback. Small models copy examples word for word, so describe the style instead. A Mac twin of the engine turned every phone deploy into a one-second experiment. With a full non-AI mode, every failure is invisible to the player. Pin the commit, size and SHA-256 of every file and check before load. And a seeded, deterministic engine lets tests measure the verdict mix: a player found “everyone is a robot” twice, and now a balance test catches it first.</aside>
+</section>
+<section id="stack" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:64px">
+<img src="assets/drip-grape.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">The Whole <span style="color:#FF7A1A">Stack</span></h2>
+<div style="display:flex;flex-direction:column;gap:32px">
+<table style="width:1664px;font-family:'Fredoka', 'Trebuchet MS', sans-serif;font-size:36px;color:#F6EEFC">
+<tr style="background:#352250"><th style="width:34%;text-align:left;font-weight:600">Component</th><th style="width:20%;text-align:left;font-weight:600">Version</th><th style="width:16%;text-align:left;font-weight:600">Licence</th><th style="width:30%;text-align:left;font-weight:600">Purpose</th></tr>
+<tr style="background:#241733"><td><b>llama.cpp xcframework</b></td><td>b11799</td><td>MIT</td><td>Inference on Metal + mtmd</td></tr>
+<tr style="background:#241733"><td><b>Qwen3-VL-2B Q4_K_M</b></td><td>commit 52d6c8f</td><td>Apache 2.0</td><td>Language model, 1,107 MB</td></tr>
+<tr style="background:#241733"><td><b>Qwen3-VL-2B mmproj Q8_0</b></td><td>commit 52d6c8f</td><td>Apache 2.0</td><td>Vision projector, 445 MB</td></tr>
+<tr style="background:#241733"><td><b>Apple frameworks</b></td><td>iOS 17+ SDK</td><td>Apple SDK</td><td>Camera, Vision, speech, UI</td></tr>
+<tr style="background:#241733"><td><b>MonsterCore package</b></td><td>in the repo</td><td>Ours</td><td>Verdicts, prompts, jokes</td></tr>
+</table>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Target: iPhone 14 Pro (A16, 6 GB) · iOS 17+ · built on a MacBook Pro, M3 Max</p>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">18</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>Everything that ships in the app or is downloaded by it. One third-party binary, one set of weights, Apple’s frameworks, and our own logic package, which holds the verdict engine, clue rules, prompts, grammars, parser, kindness checks and jokes. Swift 6.4 and Xcode 27.1 for the build.</aside>
+</section>
+<section id="thanks" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 128px;display:flex;flex-direction:column;justify-content:end;gap:24px">
+<img src="assets/drip-grape.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<img src="assets/splat-grape.svg" alt="" style="position:absolute;left:1640px;top:800px;width:280px;height:280px;object-fit:contain">
+<img src="assets/ghost.svg" alt="" style="position:absolute;left:1640px;top:180px;width:220px;height:257px;object-fit:contain;transform:rotate(4deg)">
+<img src="assets/repo-qr.png" alt="QR code linking to github.com/BillDX/monster-scanner" style="position:absolute;left:1250px;top:420px;width:380px;height:380px;object-fit:contain;border-radius:28px;box-shadow:12px 12px 0px #000000">
+<p style="position:absolute;left:1300px;top:836px;width:280px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#8CFF2E;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(4deg)">Scan me</p>
+<h1 style="font-family:'Creepster', 'Bungee', Impact, sans-serif;font-size:240px;font-weight:400;line-height:0.9;letter-spacing:2px;color:#8CFF2E;text-shadow:0px 0px 48px rgba(140, 255, 46, 0.45);width:1080px">Thank<br>You</h1>
+<div style="display:flex">
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#FF7A1A;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(-6deg)">Questions?</p>
+</div>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6;width:1080px">The model narrates. The code decides.</p>
+<p style="font-size:36px;font-weight:500;line-height:1.3;color:#C9A2FF;width:1080px">Copyleft, GPL-3.0: use it, change it, share it, keep it open.</p>
+<div style="display:flex">
+<p style="font-size:36px;font-weight:600;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 28px">Bill Mcintyre · github.com/BillDX/monster-scanner</p>
+</div>
+<aside>Thanks for listening, and happy Halloween. The whole app is on GitHub at github.com/BillDX/monster-scanner: scan the QR code. It’s free software under the GNU GPL v3.0, a copyleft licence: you can use it, study it, change it and share it, and anything you distribute that’s built from it stays open under the same licence. The model weights aren’t in the repo; the app downloads them from the official Qwen org. Happy to go deeper on any part: the grammar sampler, the heat fallback, the guardrails, or how the agent workflow ran.</aside>
+</section>
+</div></div>
+<div id="notes" aria-live="polite"></div>
+<nav id="bar" aria-label="Slide controls">
+<button id="prev" aria-label="Previous slide">&larr;</button>
+<span id="count" aria-live="polite"></span>
+<button id="next" aria-label="Next slide">&rarr;</button>
+<button id="ntoggle" aria-pressed="false">Notes (N)</button>
+<button id="fs">Full screen (F)</button>
+</nav>
+<script>
+(() => {
+  const deck = document.getElementById('deck');
+  const slides = [...deck.children];
+  const notes = document.getElementById('notes');
+  const count = document.getElementById('count');
+
+  // Draw the deck's connector lines as SVG.
+  for (const c of document.querySelectorAll('x-connector')) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('style', 'position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none');
+    svg.setAttribute('aria-hidden', 'true');
+    const st = c.getAttribute('style') || '';
+    const color = (st.match(/color:\s*([^;]+)/) || [, '#999'])[1];
+    const w = parseFloat((st.match(/border-width:\s*([\d.]+)/) || [, '2'])[1]);
+    const [x1, y1, x2, y2] = ['x1', 'y1', 'x2', 'y2'].map(a => parseFloat(c.getAttribute(a)));
+    const line = document.createElementNS(ns, 'line');
+    Object.entries({x1, y1, x2, y2, stroke: color, 'stroke-width': w, 'stroke-linecap': 'round'}).forEach(([k, v]) => line.setAttribute(k, v));
+    if (/border-style:\s*dashed/.test(st)) line.setAttribute('stroke-dasharray', `${w * 3} ${w * 2}`);
+    svg.appendChild(line);
+    if ((c.getAttribute('head') || 'end') !== 'none') {
+      const a = Math.atan2(y2 - y1, x2 - x1), L = w * 4;
+      const p = document.createElementNS(ns, 'path');
+      p.setAttribute('d', `M${x2} ${y2} L${x2 - L * Math.cos(a - .45)} ${y2 - L * Math.sin(a - .45)} L${x2 - L * Math.cos(a + .45)} ${y2 - L * Math.sin(a + .45)} Z`);
+      p.setAttribute('fill', color);
+      svg.appendChild(p);
+    }
+    c.parentElement.appendChild(svg);
+  }
+
+  // Like the deck viewer: if a slide's text runs past its bottom margin,
+  // shrink its main heading until everything fits.
+  const fitSlides = () => {
+    for (const s of slides) {
+      const limit = 1080 - parseFloat(getComputedStyle(s).paddingBottom) + 4;
+      const flow = [...s.children].filter(c => c.tagName !== 'ASIDE' && getComputedStyle(c).position !== 'absolute');
+      const bottom = () => Math.max(0, ...flow.map(c => c.offsetTop + c.offsetHeight));
+      const head = flow.find(c => /^H[12]$/.test(c.tagName));
+      if (!head) continue;
+      let size = parseFloat(getComputedStyle(head).fontSize);
+      const min = size * 0.4;
+      while (bottom() > limit && size > min) { size *= 0.95; head.style.fontSize = size + 'px'; }
+    }
+  };
+  fitSlides();
+  document.fonts.ready.then(fitSlides);
+
+  slides.forEach((s, i) => { s.setAttribute('role', 'group'); s.setAttribute('aria-roledescription', 'slide'); s.setAttribute('aria-label', `${i + 1} of ${slides.length}`); });
+
+  const fit = () => {
+    const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+    deck.style.transform = `scale(${k})`;
+  };
+  addEventListener('resize', fit); fit();
+
+  let i = 0;
+  const show = n => {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, j) => { s.classList.toggle('on', j === i); s.setAttribute('aria-hidden', j === i ? 'false' : 'true'); });
+    count.textContent = `${i + 1} / ${slides.length}`;
+    const aside = slides[i].querySelector('aside');
+    notes.textContent = aside ? aside.textContent : '';
+    if (location.hash !== `#${i + 1}`) history.replaceState(null, '', `#${i + 1}`);
+  };
+  const fromHash = () => { const n = parseInt(location.hash.slice(1), 10); return Number.isFinite(n) ? n - 1 : 0; };
+  addEventListener('hashchange', () => show(fromHash()));
+
+  const toggleNotes = () => { const on = notes.classList.toggle('on'); document.getElementById('ntoggle').setAttribute('aria-pressed', on); };
+  const fullscreen = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+  document.getElementById('prev').onclick = e => { e.stopPropagation(); show(i - 1); };
+  document.getElementById('next').onclick = e => { e.stopPropagation(); show(i + 1); };
+  document.getElementById('ntoggle').onclick = e => { e.stopPropagation(); toggleNotes(); };
+  document.getElementById('fs').onclick = e => { e.stopPropagation(); fullscreen(); };
+
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'n' || e.key === 'N') toggleNotes();
+    else if (e.key === 'f' || e.key === 'F') fullscreen();
+  });
+  document.getElementById('stage').addEventListener('click', e => show(i + (e.clientX < innerWidth / 3 ? -1 : 1)));
+  let x0 = null;
+  addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, {passive: true});
+  addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1)); x0 = null; });
+
+  show(fromHash());
+})();
+</script>
+</body>
+</html>
