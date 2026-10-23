@@ -4,6 +4,29 @@ Newest entry first. Each entry: what changed, what was measured, what's next.
 
 ---
 
+## 2026-10-22 — App Store prep
+
+**Changed** ([D-028](DECISIONS.md#d-028))
+
+- iPhones with under 6 GB of memory play Classic Mode only and are never offered the 1.55 GB download. On 6 GB phones the model loads only with at least 1.2 GB of headroom.
+- Privacy policy page on GitHub Pages, linked from Settings › About.
+- App icon: the ghost in the scanner reticle. Source in `Design/AppIcon.svg`.
+- Version 1.0 (build 1).
+- Earlier the same day: GPL-3.0 licence, public repo at github.com/BillDX/monster-scanner, talk slides on GitHub Pages.
+
+**Measured**
+
+- 79 MonsterCore tests pass (new: 4 GB vs 6 GB phones, load headroom).
+- Simulator, pretending to be a 4 GB phone: camera screen says "MODE: CLASSIC"; Settings shows "Needs a 6 GB iPhone" with no download button.
+- Release build: no warnings, 16 MB, none of the debug switches inside. Installed on the iPhone 14 Pro (it was locked, so not launched). App Store archive builds.
+
+**Next**
+
+- Bill: open the Release build and do a few scans with the AI observer.
+- App Store Connect: app record, screenshots, age rating, privacy label ("Data Not Collected"), review notes; then archive, upload, TestFlight, submit.
+
+---
+
 ## 2026-10-21 — More variety, and the Bureau explains itself
 
 **Changed**

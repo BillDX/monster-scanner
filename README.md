@@ -8,7 +8,7 @@ It is a toy. Scanner readings may be wildly inaccurate.
 
 **Talk slides:** [Monster Scanner: Halloween edition](https://billdx.github.io/monster-scanner/slides/halloween/), from the AI Engineering meetup on local and sovereign AI. Arrow keys move between slides; N shows the speaker notes.
 
-**Status:** M3 (AI observer, Chaos Mode, sounds, reveal effects, certificate). See PLAN.md for what's left. See [PLAN.md](PLAN.md) for milestones and [PROGRESS.md](PROGRESS.md) for the log.
+**Status:** 1.0, being prepared for the App Store (M3 done: AI observer, Chaos Mode, sounds, reveal effects, certificate). See [PLAN.md](PLAN.md) for milestones and [PROGRESS.md](PROGRESS.md) for the log.
 
 ## Requirements
 
@@ -81,6 +81,8 @@ MonsterScanner/            App target: SwiftUI screens, camera, Vision, haptics,
 Packages/MonsterCore/      Pure Swift game logic + unit tests (no UI)
 Benchmarks/                M2 model benchmark results (photos are never committed)
 docs/slides/halloween/    Talk slides, published with GitHub Pages
+docs/privacy/             Privacy policy (GitHub Pages)
+Design/AppIcon.svg        Source drawing for the app icon
 PLAN.md · PROGRESS.md · DECISIONS.md
 ```
 
@@ -104,6 +106,8 @@ The dependencies below keep their own licences. The model weights are not in thi
 - Full hashes and the pre-flight checks are in [D-015](DECISIONS.md#d-015); the app's pins are in `MonsterScanner/Model/ModelCatalog.swift`.
 
 ## Privacy
+
+Full policy: https://billdx.github.io/monster-scanner/privacy/
 
 - Works offline. The only network code (from M2) is the one-time model download from the official Hugging Face org, over HTTPS, verified by SHA-256.
 - Photos are analysed on the phone and never leave it. Nothing is written to disk unless you save to Case Files or make a Certificate.

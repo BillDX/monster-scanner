@@ -356,6 +356,18 @@ A test profile like Bill's scans (navy shirt, neutral or smiling, living room, s
 
 ---
 
+## D-028 — App Store prep: memory check, privacy policy, icon, 1.0 <a id="d-028"></a>
+
+Bill asked for the App Store prep after the meetup (2026-10-22).
+- **Older iPhones get Classic Mode only.** The model peaks just under 1 GB. iOS 17 also runs on 3 and 4 GB iPhones (XR, XS, 11, 12, 13, SE), where that risks the app being killed mid-scan. `DeviceMemory` (MonsterCore, tested) says an iPhone qualifies at 5 GB of physical memory or more, which splits 4 GB and 6 GB phones. On smaller phones the model status is "Needs a 6 GB iPhone", the 1.55 GB download is never offered, and Settings explains why. Even on a 6 GB phone, the model isn't loaded unless iOS allows at least 1.2 GB more; otherwise the scan uses Classic and the next foregrounding tries again. Debug builds can pretend with `-MSFakeMemoryGB 4`.
+- **Privacy policy** at https://billdx.github.io/monster-scanner/privacy/ (`docs/privacy/`), written from what the code does: no data collected, photos never leave the phone, one optional download from Hugging Face. App Review requires a link inside the app too, so Settings › About has "Privacy policy". It opens Safari; the app itself still makes no network call besides the model download.
+- **App icon:** the Boo Goo ghost inside the app's neon scanner reticle, with a scan beam, on the dark CRT screen. 1024 px, no alpha channel. Source drawing in `Design/AppIcon.svg`.
+- **Version 1.0**, build 1.
+- **Checked:** Release build has no warnings and contains none of the debug launch switches; App Store archive builds; the embedded `llama.framework` is a signed dynamic library with the right Info.plist (minimum iOS 16.4). Expect an upload warning about missing debug symbols for llama.framework; it doesn't block review.
+- **Not done:** the upload itself, App Store Connect metadata, screenshots and the review notes (Bill's steps, with help on request).
+
+---
+
 ## Spec issues
 
 Problems found in the spec, with a proposed alternative. Status shows whether Bill has decided.

@@ -89,7 +89,7 @@ Exit check: 10 consecutive scans, no crash, under 12 s each.
 
 Exit check: feels like a real app.
 
-- 🟡 Boot sequence with random checks ✅; CRT styling pass, app icon ⬜
+- 🟡 Boot sequence with random checks ✅; app icon ✅ ([D-028](DECISIONS.md#d-028)); CRT styling pass ⬜
 - ✅ Sounds, synthesised in code (pulled into M3, [D-024](DECISIONS.md#d-024))
 - ✅ Certificate of Monsterhood (pulled into M3)
 - ✅ Second Opinion and Scan Again (pulled into M1)
@@ -106,6 +106,14 @@ Exit check: all tests pass and the checklist is signed off.
 - ⬜ Accessibility: VoiceOver labels, Dynamic Type, reduce motion
 - ⬜ Privacy review against spec section 5
 - ⬜ Device checklist: airplane mode, cold launch, 10-scan soak, Low Power Mode, both cameras, dark room, bright sun
+
+## App Store 🟡
+
+- ✅ Older iPhones (under 6 GB) play Classic Mode only; load needs 1.2 GB headroom ([D-028](DECISIONS.md#d-028))
+- ✅ Privacy policy page, linked in Settings
+- ✅ App icon, version 1.0, Release build and archive check
+- ⬜ App Store Connect record, screenshots, age rating, privacy label, review notes
+- ⬜ Upload, TestFlight, submit for review
 
 ## Stretch ⬜
 

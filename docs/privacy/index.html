@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monster Scanner: Privacy Policy</title>
+<meta name="description" content="Monster Scanner collects no data. Photos are analysed on your iPhone and never leave it.">
+<style>
+:root{--bg:#050a08;--panel:#0b1510;--neon:#38ff6b;--ink:#e3f5e8;--muted:#9cb8a5;--rule:#1d3324}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f6faf7;--panel:#ffffff;--neon:#0b7a2c;--ink:#14231a;--muted:#4b6253;--rule:#d5e3d9}}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:48px 16px 64px}
+h1{font:700 30px/1.2 ui-monospace,"SF Mono",Menlo,monospace;color:var(--neon);letter-spacing:.02em;margin:0 0 8px}
+h2{font:700 18px/1.3 ui-monospace,"SF Mono",Menlo,monospace;color:var(--neon);text-transform:uppercase;letter-spacing:.06em;margin:36px 0 8px}
+p,li{margin:0 0 10px}
+ul{padding-left:20px}
+.lead{font-size:19px;background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:16px 18px;margin:20px 0 8px}
+.meta{color:var(--muted);font-size:15px}
+a{color:var(--neon)}
+a:focus-visible{outline:3px solid var(--neon);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+<h1>Monster Scanner: Privacy Policy</h1>
+<p class="meta">Effective October 22, 2026</p>
+
+<p class="lead"><strong>Monster Scanner collects no data.</strong> Photos are analysed on your iPhone and never leave it. There are no accounts, analytics, ads or tracking.</p>
+
+<h2>Photos and the camera</h2>
+<ul>
+<li>When you scan someone, the photo is analysed on your iPhone to pick a (silly) verdict. It is never uploaded anywhere.</li>
+<li>The photo is kept in memory only while you look at the result. It is not saved to your phone unless you choose to share or save a Certificate of Monsterhood.</li>
+<li>Face analysis uses Apple's on-device Vision framework to find a face's position, tilt and expression. It does not recognise who anyone is, and no face data is stored.</li>
+<li>If you import a photo, the app reads the time it was taken, on your phone, for time-of-day jokes.</li>
+</ul>
+
+<h2>The AI model</h2>
+<ul>
+<li>The optional AI observer is a model that runs entirely on your iPhone. Your photos are never sent to it over the internet.</li>
+<li>The model is downloaded once, only if you choose to, from Qwen's official repository on Hugging Face (huggingface.co), over HTTPS. Like any website, Hugging Face's servers receive your device's IP address and standard request details for that download, under <a href="https://huggingface.co/privacy">Hugging Face's privacy policy</a>. Nothing about you or your photos is sent.</li>
+<li>By default the download only happens on Wi-Fi. After it, the app does not use the network at all.</li>
+</ul>
+
+<h2>What stays on your iPhone</h2>
+<ul>
+<li>Your settings (sounds, voice, haptics, game modes), that you've seen the consent promise, and a count of verdicts.</li>
+<li>The downloaded model files, which are excluded from iCloud and device backups. You can delete them in Settings.</li>
+<li>The app reads your phone's battery level and the moon phase for jokes. This never leaves the phone.</li>
+</ul>
+<p>Deleting the app deletes all of this.</p>
+
+<h2>Sharing</h2>
+<p>If you share or save a Certificate of Monsterhood, iOS's own share sheet sends the image where you choose. The image has no location or camera data in it. Saving to Photos uses add-only permission: the app can never read your photo library.</p>
+
+<h2>Permissions</h2>
+<ul>
+<li><strong>Camera:</strong> to take the scan photo.</li>
+<li><strong>Photos (add only):</strong> only if you choose to save a certificate.</li>
+</ul>
+
+<h2>Children</h2>
+<p>Monster Scanner does not collect personal information from anyone, including children under 13. Because nothing is collected, there is nothing to request or delete.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes, the new version will be posted on this page with a new effective date.</p>
+
+<h2>Contact</h2>
+<p>Questions: open an issue at <a href="https://github.com/BillDX/monster-scanner/issues">github.com/BillDX/monster-scanner/issues</a>. The app's source code is public, so you can check all of the above.</p>
+</main>
+</body>
+</html>
