@@ -49,6 +49,52 @@ body:hover #bar,#bar:focus-within{opacity:1}
   </div>
   <aside>Happy almost-Halloween. Monster Scanner is a silly iPhone party game that scans a willing friend and reveals which monster they secretly are. It runs a 2-billion-parameter vision-language model fully on the phone. After one model download it never touches the network. Tonight: what the model does, how it runs, how we made a small model reliable and kind, and what it costs in speed and heat.</aside>
 </section>
+<section id="goals" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:16px">
+<img src="assets/drip-slime.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
+<img src="assets/splat-grape.svg" alt="" style="position:absolute;left:1640px;top:176px;width:220px;height:220px;object-fit:contain">
+<h2 style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:112px;font-weight:400;line-height:1.05;color:#F6EEFC">Seven <span style="color:#8CFF2E">Questions</span></h2>
+<p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:56px;line-height:1.05;color:#BFA9D6">What we set out to prove</p>
+<div style="display:flex;flex-direction:column;padding:16px 0px 0px">
+<div style="display:flex;align-items:baseline;gap:28px;padding:9px 0px;border-bottom:2px solid #352250">
+<p style="width:100px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#8CFF2E">01</p>
+<p style="width:420px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#F6EEFC">On-device LLM</p>
+<p style="flex:1;font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Can a real LLM run on an iPhone, with no cloud at all?</p>
+</div>
+<div style="display:flex;align-items:baseline;gap:28px;padding:9px 0px;border-bottom:2px solid #352250">
+<p style="width:100px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#8CFF2E">02</p>
+<p style="width:420px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#F6EEFC">What it takes</p>
+<p style="flex:1;font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Which runtime, model and quantisation fit in memory?</p>
+</div>
+<div style="display:flex;align-items:baseline;gap:28px;padding:9px 0px;border-bottom:2px solid #352250">
+<p style="width:100px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#8CFF2E">03</p>
+<p style="width:420px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#F6EEFC">Capabilities</p>
+<p style="flex:1;font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Can it see a photo and answer in strict, tool-ready JSON?</p>
+</div>
+<div style="display:flex;align-items:baseline;gap:28px;padding:9px 0px;border-bottom:2px solid #352250">
+<p style="width:100px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#8CFF2E">04</p>
+<p style="width:420px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#F6EEFC">Performance</p>
+<p style="flex:1;font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Fast enough for a 10-second scan, under 1 GB, when warm?</p>
+</div>
+<div style="display:flex;align-items:baseline;gap:28px;padding:9px 0px;border-bottom:2px solid #352250">
+<p style="width:100px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#8CFF2E">05</p>
+<p style="width:420px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#F6EEFC">Deterministic</p>
+<p style="flex:1;font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Can the model narrate while testable code decides?</p>
+</div>
+<div style="display:flex;align-items:baseline;gap:28px;padding:9px 0px;border-bottom:2px solid #352250">
+<p style="width:100px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#8CFF2E">06</p>
+<p style="width:420px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#F6EEFC">Guardrails</p>
+<p style="flex:1;font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Can every AI sentence stay kind, and never about looks?</p>
+</div>
+<div style="display:flex;align-items:baseline;gap:28px;padding:9px 0px">
+<p style="width:100px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#8CFF2E">07</p>
+<p style="width:420px;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1.3;color:#F6EEFC">Fallback</p>
+<p style="flex:1;font-size:36px;font-weight:500;line-height:1.3;color:#F6EEFC">Does the game still work when the model can’t?</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">02</p>
+<p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
+<aside>The question behind the game: can a real LLM live inside a deterministic iPhone app? Before writing any code, these were the seven questions. One: can a real language model run on an iPhone with no cloud? Two: what does it take: which runtime, which model size and quantisation fit in memory? Three: capabilities: can it see a photo and answer in strict JSON that code can act on, the same building block as tool calling? Four: performance: fast enough for a ten-second scan, under a gigabyte, even when the phone is warm? Five: can it live inside a deterministic app, where the model narrates and testable code decides? Six: guardrails and safety: can every AI sentence stay kind and never comment on looks or identity? Seven: fallback: does the game still work when the model is missing, slow or too hot? The rest of the talk answers them: the model and runtime slides for one and two, the jobs and grammar slides for three, performance and heat for four, the rule and architecture for five, guardrails for six, and Classic Mode throughout for seven.</aside>
+</section>
 <section id="what" data-transition="fade" style="background:#17101F;color:#F6EEFC;font-family:'Fredoka', 'Trebuchet MS', sans-serif;padding:176px 128px 176px;display:flex;flex-direction:column;gap:52px">
 <img src="assets/drip-slime.svg" alt="" style="position:absolute;left:0px;top:0px;width:1920px;height:160px">
 <img src="assets/splat-grape.svg" alt="" style="position:absolute;left:1680px;top:840px;width:240px;height:240px;object-fit:contain">
@@ -69,7 +115,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 </div>
 </div>
 <p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6;width:1480px">Vampire · Alien · Kaiju · Werewolf · Zombie · Robot · Ghost · Certified Human</p>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">02</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">03</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>The game: a scan, a drumroll, then the verdict. One of seven monsters, or, disappointingly, certified human. The 2B is a 2-billion-parameter vision-language model, running on the iPhone 14 Pro’s A16 chip with 6 GB of memory. After one model download the app makes zero network calls, so the whole thing works in airplane mode.</aside>
 </section>
@@ -92,7 +138,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
       <p style="font-family:Fredoka, 'Trebuchet MS', sans-serif; font-size:56px; font-weight:500; line-height:1.35; color:#f6eefc">Measures, decides and checks every AI sentence.</p>
     </div>
   </div>
-  <p style="position:absolute; bottom:56px; left:128px; width:112px; padding:12px 0; font-family:Bungee, sans-serif; font-size:36px; line-height:1; text-align:center; color:#f6eefc; background:#352250; border-radius:256px">03</p>
+  <p style="position:absolute; bottom:56px; left:128px; width:112px; padding:12px 0; font-family:Bungee, sans-serif; font-size:36px; line-height:1; text-align:center; color:#f6eefc; background:#352250; border-radius:256px">04</p>
   <p style="position:absolute; bottom:60px; left:272px; width:1200px; font-family:Fredoka, 'Trebuchet MS', sans-serif; font-size:36px; font-weight:500; line-height:1.3; color:#bfa9d6">Monster Scanner · Halloween edition</p>
   <aside>The model narrates, the code decides. This is the one rule the whole design follows. Deterministic Swift measures the photo and picks the verdict. The model only describes what it sees and adds playful lines. The game is complete without the model, which we call Classic Mode, so every AI failure falls back silently.</aside>
 </section>
@@ -134,7 +180,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <x-connector x1="640" y1="306" x2="640" y2="240" style="color:#BFA9D6;border-width:4px;border-style:dashed"></x-connector>
 <p style="position:absolute;left:318px;top:249px;width:306px;text-align:right;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">late or hot: skip</p>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">04</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">05</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>Every scan runs Classic measurements first, in under a second, using only Apple’s Vision models and pixel sampling. If the AI model is loaded and the phone isn’t hot, the observer reads a crop of the subject at the same time: Qwen3-VL-2B on llama.cpp, with a grammar that forces the JSON shape and a strict kindness check on all its text. Both lanes feed one deterministic verdict engine, seeded by a SHA-256 of the photo, with 47 clues on clothes, accessories, timing, pose and setting. The AI’s playful lines, the dashed green line, go straight to the reveal and are never scored. If the model is late, the phone is hot, or the JSON is invalid, the scan quietly uses Classic Mode.</aside>
 </section>
@@ -153,7 +199,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <tr style="background:#241733"><td>Vision projector</td><td>8-bit</td><td style="text-align:right">445 MB</td></tr>
 </table>
 <p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6;width:1100px">Apache 2.0 open weights from the official Qwen org. Files: Qwen3VL-2B-Instruct-Q4_K_M and mmproj-Qwen3VL-2B-Instruct-Q8_0, both GGUF.</p>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">05</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">06</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1000px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>One small open-weights vision-language model does all the AI work. Two GGUF files: the language model at 4-bit, Q4_K_M, and the vision projector at 8-bit, Q8_0. The projector turns the photo into tokens the language model can read. Together 1.55 GB on disk, and under 1 GB of memory at peak on the phone: 953 to 978 MB in our runs.</aside>
 </section>
@@ -186,7 +232,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Streams checked notes</p>
 </div>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">06</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">07</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>What the model does in the app. One: the observer runs on every scan. A crop of at most 512 pixels in, JSON out, with hair, eye and shirt colour, age band, expression, accessories and setting, plus three playful fields that are shown but never scored. Two: Chaos Mode, opt-in. The same call returns a 0 to 100 score per monster; code clamps them, the top one wins, and anything under 40 becomes certified human. Three: AI field notes, experimental and off by default. After the reveal it streams a short postscript, one checked sentence at a time, so it can never delay the reveal.</aside>
 </section>
@@ -217,7 +263,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 </div>
 </div>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">07</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">08</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>The choice came down to provenance and support. It was the spec’s first choice, with official GGUF files from Qwen itself. The pinned llama.cpp build supports its architecture: the qwen3vl text model and the QWEN3VL projector. At 4-bit it fits next to the camera and UI on a 6 GB phone, and Apache 2.0 lets it ship in an app. A quick feasibility check in PocketPal came before any integration code. Qwen3.5-2B is the upgrade candidate, but it only has a community GGUF from Unsloth, which needs approval first. MLX, with mlx-swift-lm 3.32.3, stays the fallback runtime. The F16 projector, 819 MB, was kept in reserve in case Q8_0 hurt accuracy.</aside>
 </section>
@@ -243,7 +289,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">126 tokens/s on a Mac</p>
 </div>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">08</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">09</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>The model runs on the A16’s GPU through llama.cpp’s official prebuilt xcframework, build b11799, MIT licensed. Its mtmd library handles image input. The catch: there is no Simulator slice, only iPhone and Mac, so llama.cpp links into device builds only and the Simulator plays Classic Mode. The Swift wrapper, LlamaEngine, is an actor on its own serial queue, so blocking C calls never touch the main thread. The lifecycle: verify the files, load in 0.73 seconds, unload on a memory warning or in the background, skip when hot. And a Mac twin, LlamaProbe, runs the same engine source at 126 tokens a second, so prompt experiments skip the phone.</aside>
 </section>
@@ -261,7 +307,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <div style="display:flex">
 <p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#8CFF2E;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(-4deg)">5 of 5 valid on the phone</p>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">09</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">10</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>A GBNF grammar fixes the JSON shape at sampling time; the sampler decides what it costs. Without help, a 2B model wraps its JSON in code fences and invents accessories. A grammar over the full 152k vocabulary more than halves speed. Top-k first was fast but crashed once temperature was on, because it could pick a token the grammar forbids and llama.cpp throws a C++ exception. The shipped sampler draws one token freely, checks only that token, and resamples over the whole vocabulary only on a rare rejection. That is llama.cpp’s own approach. Result: valid JSON on every run, 5 of 5 on the phone, first try each time.</aside>
 </section>
@@ -287,7 +333,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 </div>
 </div>
 <p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">On a props photo: “a top hat” · “two red balloons” · “like a happy, slightly sleepy explorer”</p>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">10</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">11</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>Four more lessons. An early sampler copied every score into Swift for every token: 14 to 16 tokens a second on the phone instead of about 20, roughly a quarter of the speed gone. Greedy decoding, temperature 0, keeps readings reproducible; 0.6 was vaguer. Examples in a prompt get copied word for word: show a red bobble hat and it reports red bobble hats, so describe the style instead. And “only describe what you can clearly see; never invent items” stopped the invented hats and glasses. A parser that strips code fences, plus one retry, is the last line of defence; two failures means a silent fall back to Classic.</aside>
 </section>
@@ -312,7 +358,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Word lists: unkind, age, looks, stereotypes</p>
 </div>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">11</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">12</p>
 <p style="position:absolute;left:272px;bottom:60px;width:900px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>The model never decides anything that is scored, except in opt-in Chaos Mode. Every piece of AI text passes three layers: prompt rules, grammar limits, and a kindness check in the model, with safety reinforced in code. Word lists cover unkind, age, looks and stereotype words, and a failing field is dropped on its own. Clothing colours like “black hat” stay fine; colour-plus-person phrases do not. Streamed field notes are held a sentence at a time and dropped if unkind, if they name another monster, or if they echo the instructions. In a 50-note test: 187 sentences kept, 13 dropped, none unkind. AI-written dossiers looped and copied their examples, so the comedy is code: 64 templates, exhibit jokes that slot in what the AI spotted, and the Bureau’s reasoning.</aside>
 </section>
@@ -339,7 +385,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <p style="position:absolute;left:1088px;top:862px;width:120px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">10 s</p>
 <p style="position:absolute;left:1298px;top:862px;width:120px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">15 s</p>
 <p style="position:absolute;left:1508px;top:862px;width:120px;text-align:center;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">20 s</p>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">12</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">13</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1400px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Source: LlamaProbe (Mac) · in-app benchmark (iPhone 14 Pro, Debug)</p>
 <aside>On a cool iPhone 14 Pro the observer answers in 6.4 to 8.5 seconds, inside its 9.5-second deadline. The green rows are what ships. The scan ends by 10 seconds and a 1.1-second drumroll covers the rest, so the reveal lands inside the 12-second budget. Before the sampler fix, the detail-rich photo took 11 seconds and would have fallen back to Classic. A hot phone takes 15 to 20 seconds, so at thermal “serious” the app skips the model.</aside>
 </section>
@@ -361,7 +407,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#A560FF;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(4deg)">~20 tokens/s</p>
 <p style="font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;letter-spacing:1px;text-transform:uppercase;color:#17101F;background:#FF4FAE;border-radius:999px;padding:16px 28px;box-shadow:12px 12px 0px #000000;transform:rotate(-6deg)">978 MB peak</p>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">13</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">14</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>Raw speed was fine on a cool phone. Heat was the real monster. Back-to-back scans on the charger took the phone to thermal “fair” at scan 6 and “serious” at scan 8, where generation runs at about half speed. Rather than tune a faster prompt, the app simply skips the model when hot, and scans 9 and 10 used Classic Mode with no crash. The worst shutter-to-reveal in the 10-scan soak was 9.1 seconds, against a 12-second budget. Other numbers: model load 0.73 seconds, about 20 tokens a second on the phone (105 to 126 on the Mac), 978 MB peak memory, and a 1.41-second SHA-256 check at launch.</aside>
 </section>
@@ -394,7 +440,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">New stuff needs a human yes</p>
 </div>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">14</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">15</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>After a one-time 1.55 GB download, photos, model and results never leave the phone; it works in airplane mode. The only network code is the model download: HTTPS to the official Qwen org on Hugging Face, pinned to one repo commit, size shown first, Wi-Fi only by default. The runtime and both model files are pinned by SHA-256 and hashed again before the first load every launch, 1.41 seconds on the phone; a mismatch deletes the files and the app stays in Classic Mode. The build and repo were checked against GitHub, Hugging Face and the NIST CVE database first. One binary (llama.cpp, MIT) and one set of weights (Apache 2.0): no analytics, ads or accounts. Photos stay in memory, there is no face recognition, and shared images carry no metadata. New dependencies, network calls and permissions need the owner’s yes.</aside>
 </section>
@@ -410,7 +456,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <tr style="background:#241733"><td><b>CryptoKit</b></td><td>SHA-256 checks and the per-photo seed</td></tr>
 <tr style="background:#241733"><td><b>URLSession</b></td><td>The model download: the only network code</td></tr>
 </table>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">15</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">16</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>Apart from llama.cpp, everything is Apple’s own on-device frameworks. Classic Mode uses no model of ours at all, only the models built into Vision: face rectangles and landmarks, plus Apple’s built-in image classifier, read through an allow-list of labels such as hats, sunglasses, beach or kitchen. Core Image adds smile and blink flags. Hair and shirt colour and blur are plain pixel sampling in Swift. ImageIO reads a photo’s capture time for the time-of-day clues, and ProcessInfo’s thermal state drives the heat fallback.</aside>
 </section>
@@ -444,7 +490,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Flag spec problems</p>
 </div>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">16</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">17</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>An AI coding agent, Claude Code running Claude Opus 5.5, built the app from a written spec: the code, tests, scripts and docs. It built and deployed to the Simulator and the iPhone from the command line and ran the benchmarks. Helper agents in separate git worktrees built the sound effects, reveal effects and certificate in parallel. LlamaProbe is a Mac CLI on the same engine source, for prompt experiments. devicectl and scripts ran the benchmarks, a 10-scan soak and a 50-note kindness check; Swift Testing runs 76 tests covering verdict balance, kindness, the parser and determinism. The working agreement: plan, progress and decision logs updated together; small commits with human review at every milestone; ask before any dependency, network call or permission; flag spec problems rather than silently improvising.</aside>
 </section>
@@ -489,7 +535,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 <p style="font-size:56px;font-weight:500;line-height:1.35;color:#F6EEFC">Test the mix</p>
 </div>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">17</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">18</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>The biggest lesson: give a small local model the job it is good at, looking and describing, and keep judgement, jokes and safety in code. A grammar turned usually-JSON into always-valid JSON, but the sampler design decides whether that costs a few percent or more than half your speed. One Swift loop over the vocabulary cost about 25% of phone speed, so keep per-token work in C. Heat, not peak speed, is the phone’s real limit: plan the fallback. Small models copy examples word for word, so describe the style instead. A Mac twin of the engine turned every phone deploy into a one-second experiment. With a full non-AI mode, every failure is invisible to the player. Pin the commit, size and SHA-256 of every file and check before load. And a seeded, deterministic engine lets tests measure the verdict mix: a player found “everyone is a robot” twice, and now a balance test catches it first.</aside>
 </section>
@@ -507,7 +553,7 @@ body:hover #bar,#bar:focus-within{opacity:1}
 </table>
 <p style="font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Target: iPhone 14 Pro (A16, 6 GB) · iOS 17+ · built on a MacBook Pro, M3 Max</p>
 </div>
-<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">18</p>
+<p style="position:absolute;left:128px;bottom:56px;width:112px;text-align:center;font-family:'Bungee', 'Arial Black', sans-serif;font-size:36px;line-height:1;color:#F6EEFC;background:#352250;border-radius:999px;padding:12px 0px">19</p>
 <p style="position:absolute;left:272px;bottom:60px;width:1200px;font-size:36px;font-weight:500;line-height:1.3;color:#BFA9D6">Monster Scanner · Halloween edition</p>
 <aside>Everything that ships in the app or is downloaded by it. One third-party binary, one set of weights, Apple’s frameworks, and our own logic package, which holds the verdict engine, clue rules, prompts, grammars, parser, kindness checks and jokes. Swift 6.4 and Xcode 27.1 for the build.</aside>
 </section>
