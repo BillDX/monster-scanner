@@ -1,4 +1,5 @@
 import Foundation
+import MonsterCore
 import Observation
 import UIKit
 
@@ -10,6 +11,8 @@ final class ModelService {
     enum Status: Equatable {
         /// No llama.cpp build for this platform (the iOS Simulator).
         case unsupported
+        /// This iPhone has under 6 GB of memory: Classic Mode only (D-028).
+        case needsMoreMemory
         case notInstalled
         case downloading(Double)
         case verifying
@@ -47,11 +50,15 @@ final class ModelService {
         self.defaults = defaults
         aiEnabled = defaults.object(forKey: Keys.aiEnabled) as? Bool ?? true
         allowCellular = defaults.bool(forKey: Keys.cellular)
-        #if canImport(llama)
-        status = ModelStore.isInstalled(ModelCatalog.current) ? .sleeping : .notInstalled
-        #else
-        status = .unsupported
-        #endif
+        if !DeviceMemory.supportsModel(physicalBytes: Self.physicalMemory) {
+            status = .needsMoreMemory
+        } else {
+            #if canImport(llama)
+            status = ModelStore.isInstalled(ModelCatalog.current) ? .sleeping : .notInstalled
+            #else
+            status = .unsupported
+            #endif
+        }
         NotificationCenter.default.addObserver(
             forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -63,6 +70,21 @@ final class ModelService {
     nonisolated static var isTooHot: Bool {
         ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue
     }
+
+    /// The phone's total memory. Debug builds can pretend to be a smaller
+    /// iPhone with `-MSFakeMemoryGB 4`.
+    nonisolated static var physicalMemory: UInt64 {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        if let flag = args.firstIndex(of: "-MSFakeMemoryGB"), flag + 1 < args.count, let gb = Double(args[flag + 1]) {
+            return UInt64(gb * 1_000_000_000)
+        }
+        #endif
+        return ProcessInfo.processInfo.physicalMemory
+    }
+
+    /// Whether this iPhone can run the model at all.
+    var deviceSupportsModel: Bool { status != .needsMoreMemory }
 
     /// The observer to use for a scan right now, or nil for Classic Mode.
     var observerForScan: (any ObservationModel)? {
@@ -87,10 +109,18 @@ final class ModelService {
     /// screen and when the app comes back to the foreground.
     func prepare() async {
         #if canImport(llama)
-        guard aiEnabled, !preparing, observer == nil else { return }
+        guard aiEnabled, !preparing, observer == nil, deviceSupportsModel else { return }
         guard ModelStore.isInstalled(pack) else {
             if case .downloading = status { return }
             status = .notInstalled
+            return
+        }
+        // Even on a 6 GB iPhone, skip loading while other apps hold the memory;
+        // the next foregrounding tries again (D-028).
+        let available = MemoryProbe.availableBytes
+        guard DeviceMemory.canLoadNow(availableBytes: available) else {
+            DebugLog.shared.record("Model not loaded: only \(MemoryProbe.megabytes(available)) free, Classic Mode for now")
+            status = .sleeping
             return
         }
         preparing = true
@@ -139,7 +169,7 @@ final class ModelService {
     // MARK: Download
 
     func download() {
-        guard downloader == nil else { return }
+        guard downloader == nil, deviceSupportsModel else { return }
         let downloader = ModelDownloader(allowCellular: allowCellular)
         self.downloader = downloader
         status = .downloading(0)
@@ -177,7 +207,7 @@ final class ModelService {
         try? ModelStore.delete(pack)
         verifiedThisLaunch = false
         #if canImport(llama)
-        status = .notInstalled
+        if deviceSupportsModel { status = .notInstalled }
         #endif
     }
 
@@ -186,6 +216,7 @@ final class ModelService {
     var bootLine: String {
         switch status {
         case .unsupported: "AI MODEL: NOT AVAILABLE IN SIMULATOR"
+        case .needsMoreMemory: "AI MODEL: NEEDS A 6 GB IPHONE (CLASSIC MODE)"
         case .notInstalled: "AI MODEL: DOWNLOAD REQUIRED (\(pack.sizeText), WI-FI RECOMMENDED)"
         case .downloading(let f): "AI MODEL: DOWNLOADING \(Int(f * 100))%"
         case .verifying: "AI MODEL: CHECKING SEALS (SHA-256)…"

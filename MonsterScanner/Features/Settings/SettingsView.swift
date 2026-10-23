@@ -32,6 +32,7 @@ struct SettingsView: View {
                 Section("About") {
                     LabeledContent("Version", value: BootView.version)
                     LabeledContent("Network", value: "Model download only")
+                    Link("Privacy policy", destination: URL(string: "https://billdx.github.io/monster-scanner/privacy/")!)
                     NavigationLink("Debug log") { DebugView() }
                 }
             }
@@ -64,6 +65,12 @@ struct ModelSettingsSection: View {
             case .unsupported:
                 Text("The AI model runs on iPhone only. The Simulator uses Classic Mode.")
                     .foregroundStyle(.secondary)
+            case .needsMoreMemory:
+                Text("The AI observer needs an iPhone with 6 GB of memory or more (iPhone 12 Pro, 13 Pro, 14 or newer). This iPhone plays Classic Mode, with every verdict and joke.")
+                    .foregroundStyle(.secondary)
+                if ModelStore.isInstalled(models.pack) {
+                    Button("Delete model", role: .destructive) { models.deleteModel() }
+                }
             case .notInstalled, .failed:
                 Button("Download (\(models.pack.sizeText))") { models.download() }
                 Toggle("Allow cellular data", isOn: $models.allowCellular)
@@ -76,13 +83,18 @@ struct ModelSettingsSection: View {
         } header: {
             Text("AI observer")
         } footer: {
-            Text("Downloaded once over HTTPS from Qwen's official Hugging Face repo (Apache 2.0) and checked with SHA-256. After that the app never uses the network. Wi-Fi recommended.")
+            if models.deviceSupportsModel {
+                Text("Downloaded once over HTTPS from Qwen's official Hugging Face repo (Apache 2.0) and checked with SHA-256. After that the app never uses the network. Wi-Fi recommended.")
+            } else {
+                Text("Nothing is downloaded on this iPhone, and the app never uses the network.")
+            }
         }
     }
 
     private var statusText: String {
         switch models.status {
         case .unsupported: "Not available here"
+        case .needsMoreMemory: "Needs a 6 GB iPhone"
         case .notInstalled: "Not downloaded"
         case .downloading(let f): "Downloading \(Int(f * 100))%"
         case .verifying: "Checking SHA-256…"

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="screen" cx="50%" cy="46%" r="70%">
+      <stop offset="0" stop-color="#0f2b1a"/>
+      <stop offset="0.6" stop-color="#06140c"/>
+      <stop offset="1" stop-color="#020604"/>
+    </radialGradient>
+    <pattern id="lines" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="3" fill="#000" opacity="0.28"/>
+    </pattern>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ghostglow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22" result="a"/>
+      <feFlood flood-color="#38ff6b" flood-opacity="0.55"/>
+      <feComposite in2="a" operator="in" result="g"/>
+      <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#38ff6b" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#38ff6b" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#38ff6b" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#screen)"/>
+
+  <!-- faint radar rings -->
+  <g fill="none" stroke="#38ff6b" stroke-opacity="0.13" stroke-width="4">
+    <circle cx="512" cy="530" r="250"/>
+    <circle cx="512" cy="530" r="380"/>
+  </g>
+
+  <!-- the friendly ghost (Boo Goo), scaled up -->
+  <g transform="translate(236 182) scale(2.3)" filter="url(#ghostglow)">
+    <path fill="#f6eefc" d="M120 12C58 12 24 60 24 120V258Q40 240 56 258T88 258T120 258T152 258T184 258T216 258V120C216 60 182 12 120 12Z"/>
+    <ellipse fill="#06140c" cx="88" cy="112" rx="16" ry="24"/>
+    <ellipse fill="#06140c" cx="152" cy="112" rx="16" ry="24"/>
+    <circle fill="#f6eefc" cx="93" cy="102" r="6"/>
+    <circle fill="#f6eefc" cx="157" cy="102" r="6"/>
+    <ellipse fill="#06140c" cx="120" cy="178" rx="20" ry="26"/>
+    <ellipse fill="#ff4fae" opacity=".55" cx="62" cy="150" rx="14" ry="8"/>
+    <ellipse fill="#ff4fae" opacity=".55" cx="178" cy="150" rx="14" ry="8"/>
+  </g>
+
+  <!-- scan beam across the ghost -->
+  <rect x="150" y="560" width="724" height="90" fill="url(#beam)"/>
+  <rect x="150" y="602" width="724" height="7" rx="3.5" fill="#b8ffca" filter="url(#glow)"/>
+
+  <!-- targeting reticle corners -->
+  <g fill="none" stroke="#38ff6b" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <path d="M150 330V150H330"/>
+    <path d="M694 150H874V330"/>
+    <path d="M874 694V874H694"/>
+    <path d="M330 874H150V694"/>
+  </g>
+
+  <rect width="1024" height="1024" fill="url(#lines)"/>
+</svg>
